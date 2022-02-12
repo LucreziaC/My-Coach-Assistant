@@ -1,8 +1,8 @@
 package com.lucreziacarena.mycoachassistant.di
 
-import com.lucreziacarena.mycoachassistant.repository.api.ApiService
 import com.lucreziacarena.mycoachassistant.BuildConfig
 import com.lucreziacarena.mycoachassistant.repository.api.APIUrls
+import com.lucreziacarena.mycoachassistant.repository.api.ApiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
