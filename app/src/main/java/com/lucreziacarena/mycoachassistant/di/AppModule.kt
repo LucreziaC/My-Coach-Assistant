@@ -14,13 +14,13 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 abstract class AppModule {
 
-    @Binds
+    /*@Binds
     @Singleton
     abstract fun bindsRemoteDataSource(remoteDataSource: ApiHelperImpl): ApiHelper
 
     @Binds
     @Singleton
     abstract fun bindsRepository(repository: RepositoryImpl) : Repository
-
+*/
 }
 

@@ -1,9 +1,10 @@
 package com.lucreziacarena.mycoachassistant.repository.api
 
-import com.lucreziacarena.mycoachassistant.repository.results.GetAthleticsResult
+import com.lucreziacarena.mycoachassistant.repository.results.AthletesResult
+import kotlinx.coroutines.flow.Flow
 
 interface ApiHelper {
 
-    suspend fun getAthelticsList(seed:String, inc: String, gender: String, results:Int): GetAthleticsResult
+    suspend fun getAthelticsList(): AthletesResult
 
 }
