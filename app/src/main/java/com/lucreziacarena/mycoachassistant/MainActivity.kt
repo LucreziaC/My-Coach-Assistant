@@ -10,7 +10,9 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.lucreziacarena.mycoachassistant.db.AppDatabase
 import com.lucreziacarena.mycoachassistant.ui.theme.MyCoachAssistantTheme
+import com.squareup.sqldelight.android.AndroidSqliteDriver
 import dagger.hilt.android.AndroidEntryPoint
 
 
@@ -19,6 +21,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val viewmodel by viewModels<ViewModelTest>()
+
         setContent {
             MyCoachAssistantTheme {
                 // A surface container using the 'background' color from the theme

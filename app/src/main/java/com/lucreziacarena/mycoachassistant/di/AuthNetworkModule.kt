@@ -23,38 +23,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkingModule {
 
-    /* @Provides
-     fun provideBaseUrl() = APIUrls.BASE_URL
-
-     @Singleton
-     @Provides
-     fun provideOkHttpClient() = if (BuildConfig.DEBUG){
-         val loggingInterceptor =HttpLoggingInterceptor()
-         loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
-         OkHttpClient.Builder()
-             .addInterceptor(loggingInterceptor)
-             .build()
-     }else{
-         OkHttpClient
-             .Builder()
-             .build()
-     }
-
-     @Singleton
-     @Provides
-     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit = Retrofit.Builder()
-         .addConverterFactory(GsonConverterFactory.create())
-         .baseUrl(APIUrls.BASE_URL)
-         .client(okHttpClient)
-         .build()
-
-     @Provides
-     @Singleton
-     fun provideApiService(retrofit: Retrofit): ApiService = retrofit.create(ApiService::class.java)
- */
 //KTOR
-
-
     @Provides
     @Singleton
     fun provideHttpClient(): HttpClient = HttpClient(Android) {
@@ -71,11 +40,4 @@ object NetworkingModule {
     @Singleton
     fun providePostsApi(client: HttpClient): ApiService = ApiServiceImpl(client)
 
-    @Provides
-    @Singleton
-    fun provideApiHelper(api: ApiService): ApiHelper = ApiHelperImpl(api)
-
-    @Provides
-    @Singleton
-    fun providePostsRepository(apiHelper: ApiHelper): Repository = RepositoryImpl(apiHelper)
 }
