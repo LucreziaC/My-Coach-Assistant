@@ -94,21 +94,26 @@ dependencies {
 
     //Kotlin Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0'
 
     //Status Bar
-    implementation "com.google.accompanist:accompanist-systemuicontroller:0.17.0"
+    implementation 'com.google.accompanist:accompanist-systemuicontroller:0.20.3'
 
     //Material 3
     implementation "androidx.compose.material3:material3:1.0.0-alpha05"
 
     //Ktor
-    implementation "io.ktor:ktor-client-okhttp:$ktor_version"
-    implementation "io.ktor:ktor-client-json:$ktor_version"
     implementation "io.ktor:ktor-client-serialization-jvm:$ktor_version"
-    implementation "io.ktor:ktor-client-logging-jvm:$ktor_version"
+    implementation "io.ktor:ktor-client-logging:$ktor_version"
     implementation "io.ktor:ktor-client-android:$ktor_version"
-    implementation 'io.ktor:ktor-client-gson:1.2.2'
+    implementation "io.ktor:ktor-client-core:$ktor_version"
+    implementation 'ch.qos.logback:logback-classic:1.2.10'
 
+
+    // viewmodel compose
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.4.1"
+
+    // coroutines
 
 
 
