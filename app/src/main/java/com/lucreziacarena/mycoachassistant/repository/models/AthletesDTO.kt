@@ -1,4 +1,5 @@
 package com.lucreziacarena.mycoachassistant.repository.models
+import com.lucreziacarena.mycoachassistant.sql.Athlete
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -27,7 +28,7 @@ data class AthletesDTO(
     }
 }
 
-fun AthletesDTO.Result.toDomain(): AthleteModel {
-    return AthleteModel(this.name.first, this.name.last, this.picture.medium)
+fun AthletesDTO.Result.toDomain(): Athlete {
+    return Athlete(this.name.first, this.name.last, this.picture.medium)
 }
 

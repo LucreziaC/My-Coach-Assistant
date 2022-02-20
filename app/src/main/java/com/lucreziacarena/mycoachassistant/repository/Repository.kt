@@ -2,16 +2,13 @@ package com.lucreziacarena.mycoachassistant.repository
 
 import com.lucreziacarena.mycoachassistant.db.AppDatabase
 import com.lucreziacarena.mycoachassistant.repository.api.ApiHelper
-import com.lucreziacarena.mycoachassistant.repository.models.AthleteModel
 import com.lucreziacarena.mycoachassistant.repository.models.toDomain
 import com.lucreziacarena.mycoachassistant.repository.results.AthletesError
 import com.lucreziacarena.mycoachassistant.repository.results.DataState
 import com.lucreziacarena.mycoachassistant.sql.Athlete
 import com.lucreziacarena.mycoachassistant.utils.PreferencesHelper
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 import java.util.*
 import javax.inject.Inject
 
@@ -49,7 +46,7 @@ class RepositoryImpl @Inject constructor(
                 else {
                     emit(DataState.Success(data = athletesFromDB))
                 }
-                sharedPreferences.setLongPreference(PreferencesHelper.LAST_NETWORK_LOOKUP, now)
+               sharedPreferences.setLongPreference(PreferencesHelper.LAST_NETWORK_LOOKUP, now)
             } catch (e: Exception) {
                 emit(DataState.Error(AthletesError.GenericError(e.message ?: "Error")))
             }

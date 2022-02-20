@@ -6,11 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lucreziacarena.mycoachassistant.repository.Repository
 import com.lucreziacarena.mycoachassistant.repository.models.AthleteModel
-import com.lucreziacarena.mycoachassistant.repository.results.AthletesResult
-import com.lucreziacarena.mycoachassistant.repository.results.NetworkResponse
+import com.lucreziacarena.mycoachassistant.repository.results.DataState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -27,11 +24,11 @@ class ViewModelTest @Inject constructor(
         viewModelScope.launch {
             repository.getAthelticsList().collect(){
                     when(it){
-                        is NetworkResponse.Error -> println(it.message)
-                        is NetworkResponse.Loading -> {
+                        is DataState.Error -> println(it.error)
+                        is DataState.Loading -> {
 
                         }
-                        is NetworkResponse.Success -> {
+                        is DataState.Success -> {
                             it.data?.map {
                                 println("ATLETA: ${it.name}")
                             }
