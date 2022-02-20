@@ -115,13 +115,16 @@ dependencies {
     implementation "io.ktor:ktor-client-core:$ktor_version"
     implementation 'ch.qos.logback:logback-classic:1.2.10'
 
-
     // viewmodel compose
     implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.4.1"
 
     // SQLDelight
     implementation 'com.squareup.sqldelight:android-driver:1.5.3'
     testImplementation 'com.squareup.sqldelight:sqlite-driver:1.5.3'
+
+    //Icons extended
+    implementation "androidx.compose.material:material-icons-extended:$compose_version"
+
 
 }
 
