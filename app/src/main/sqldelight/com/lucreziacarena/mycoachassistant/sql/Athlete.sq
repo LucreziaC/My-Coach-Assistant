@@ -1,0 +1,18 @@
+CREATE TABLE athlete(
+    name    TEXT,
+    surname TEXT,
+    picture TEXT,
+
+    PRIMARY KEY(name,surname)
+);
+
+insert:
+INSERT OR REPLACE INTO athlete(name, surname, picture)
+VALUES ?;
+
+selectAll:
+SELECT *
+FROM athlete;
+
+
+

@@ -15,26 +15,19 @@ data class AthletesDTO(
             val first: String,
             val last: String,
             val title: String
-        ) {
-            fun toDomain(): AthleteModel.Name {
-                return AthleteModel.Name(this.first, this.last, this.title)
-            }
-        }
+        )
 
         @Serializable
         data class Picture(
             val large: String,
             val medium: String,
             val thumbnail: String
-        ) {
-            fun toDomain(): AthleteModel.Picture {
-                return AthleteModel.Picture(this.large, this.medium, this.thumbnail)
-            }
-        }
+        )
+
     }
 }
 
 fun AthletesDTO.Result.toDomain(): AthleteModel {
-    return AthleteModel(this.name.toDomain(), this.picture.toDomain())
+    return AthleteModel(this.name.first, this.name.last, this.picture.medium)
 }
 
