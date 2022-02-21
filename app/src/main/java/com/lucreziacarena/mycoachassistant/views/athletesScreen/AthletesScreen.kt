@@ -1,34 +1,25 @@
 package com.lucreziacarena.mycoachassistant.views.athletesScreen
 
 import androidx.compose.animation.rememberSplineBasedDecay
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.TextField
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.google.gson.Gson
+import com.lucreziacarena.mycoachassistant.R
+import com.lucreziacarena.mycoachassistant.navigation.NavigationItem
 import com.lucreziacarena.mycoachassistant.repository.models.AthleteModel
 import com.lucreziacarena.mycoachassistant.repository.results.AthletesError
 import com.lucreziacarena.mycoachassistant.ui.components.TopAppBar
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
-import com.lucreziacarena.mycoachassistant.R
 
 
 @ExperimentalMaterial3Api
@@ -39,7 +30,9 @@ fun AthletesScreen(navController: NavController) {
     val errorMessage = remember { mutableStateOf("") }
     val showErrorDialog = remember { mutableStateOf(false) }
     val showLoading = remember { mutableStateOf(false) }
+    val athleteChosen: MutableState<AthleteModel?> = remember { mutableStateOf(null) }
     observeStates(viewModel.state.value, athletesList, errorMessage, showErrorDialog, showLoading)
+    observeAction(viewModel,viewModel.action.value, athleteChosen,navController)
 
     val decayAnimationSpec = rememberSplineBasedDecay<Float>()
     val scrollBehavior = remember(decayAnimationSpec) {
@@ -47,7 +40,7 @@ fun AthletesScreen(navController: NavController) {
     }
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = { TopAppBar("Athlets List", navController = navController, scrollBehavior = scrollBehavior) }
+        topBar = { TopAppBar("Athlets List", navController = navController, scrollBehavior = scrollBehavior, backNavigation = false) }
     ) {
 
         val openDialog = remember { mutableStateOf(false) }
@@ -75,6 +68,7 @@ fun AthletesScreen(navController: NavController) {
                     TextButton(
                         onClick = {
                             openDialog.value = false
+                            viewModel.send(AthleteScreenEvent.InsertedMeters)
                         }
                     ) {
                         Surface {
@@ -90,6 +84,7 @@ fun AthletesScreen(navController: NavController) {
             itemsIndexed(athletesList) { index, athlete ->
                 AthleteRowItem(athlete) {
                     openDialog.value = true
+                    athleteChosen.value = athlete
                 }
 
                 if (index < athletesList.lastIndex)
@@ -98,6 +93,17 @@ fun AthletesScreen(navController: NavController) {
         }
     }
 
+}
+
+fun observeAction(viewModel: AthletesViewModel,action: AthleteScreenAction, athleteChosen: MutableState<AthleteModel?>, navController: NavController) {
+    when(action){
+        AthleteScreenAction.NavigateToSessionScreen -> {
+            val athlete = Gson().toJson(athleteChosen.value)
+            navController.navigate(NavigationItem.Session.route + "?athlete=$athlete")
+            viewModel.send(AthleteScreenEvent.Init)
+        }
+        AthleteScreenAction.NoAction -> {}
+    }
 }
 
 fun observeStates(
