@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.lucreziacarena.mycoachassistant.R
 import com.lucreziacarena.mycoachassistant.navigation.NavigationItem
 
@@ -21,6 +22,8 @@ fun BottomNavigationBar(navController: NavController) {
         backgroundColor = MaterialTheme.colors.primary,
         contentColor = White
     ) {
+        val navBackStackEntry = navController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry.value?.destination?.route
         items.forEach { item ->
             BottomNavigationItem(
                 icon = { Icon(item.icon, contentDescription = item.title) },
@@ -28,7 +31,7 @@ fun BottomNavigationBar(navController: NavController) {
                 selectedContentColor = White,
                 unselectedContentColor =White.copy(0.4f),
                 alwaysShowLabel = true,
-                selected = false,
+                selected = currentRoute == item.route,
                 onClick = {
                     navController.navigate(item.route) {
                         // Pop up to the start destination of the graph to

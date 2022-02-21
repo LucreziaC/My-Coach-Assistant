@@ -14,5 +14,8 @@ selectAll:
 SELECT *
 FROM athlete;
 
+clearTable:
+DELETE FROM athlete;
+
 
 

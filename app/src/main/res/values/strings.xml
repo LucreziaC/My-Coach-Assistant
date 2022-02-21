@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">My Coach Assistant</string>
+    <string name="set_distance_alert_title">Set distance</string>
+    <string name="ok">OK</string>
 </resources>
