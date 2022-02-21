@@ -36,6 +36,7 @@ class RepositoryImpl @Inject constructor(
                 val now = Calendar.getInstance().timeInMillis
                 val lastTimeChecked = sharedPreferences.getLongPreference(PreferencesHelper.LAST_NETWORK_LOOKUP)
                 if (now > lastTimeChecked + ATHLETES_CACHE_TIME) { //if is more than 6hours since last time I get athletes from web service
+                    database.athleteQueries.clearTable() //the athlets list has random items, so I have to clear table in order to fetch new athletes from ws
                     val athleteslList = apiHelper.getAthelticsList().results.map { it.toDomain() }
                     athleteslList.map {athleteModel ->
                         database.athleteQueries.insert(athleteModel.toDbEntity())

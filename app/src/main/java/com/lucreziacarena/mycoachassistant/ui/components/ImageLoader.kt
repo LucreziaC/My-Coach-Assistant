@@ -6,18 +6,14 @@ import androidx.annotation.DrawableRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.painter.BitmapPainter
-import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import com.bumptech.glide.Glide
-import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 
 @Composable
-fun loadPicture(url: String, @DrawableRes placeholder: Int? = null): MutableState<Bitmap?> {
+fun loadPicture(url: String,  placeholder: ImageVector? = null): MutableState<Bitmap?> {
 
     var bitmapState: MutableState<Bitmap?> = mutableStateOf(null)
     val context = LocalContext.current
