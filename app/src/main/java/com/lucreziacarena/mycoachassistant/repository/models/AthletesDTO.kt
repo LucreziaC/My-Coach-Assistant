@@ -28,7 +28,7 @@ data class AthletesDTO(
     }
 }
 
-fun AthletesDTO.Result.toDomain(): Athlete {
-    return Athlete(this.name.first, this.name.last, this.picture.medium)
+fun AthletesDTO.Result.toDomain(): AthleteModel {
+    return AthleteModel(this.name.first, this.name.last, this.picture.medium)
 }
 

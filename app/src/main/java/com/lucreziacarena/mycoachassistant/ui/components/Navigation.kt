@@ -5,7 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.lucreziacarena.mycoachassistant.navigation.NavigationItem
-import com.lucreziacarena.mycoachassistant.views.AthletesScreen
+import com.lucreziacarena.mycoachassistant.views.athletesScreen.AthletesScreen
 import com.lucreziacarena.mycoachassistant.views.LeaderboardScreen
 
 @Composable

@@ -2,6 +2,8 @@ package com.lucreziacarena.mycoachassistant.repository
 
 import com.lucreziacarena.mycoachassistant.db.AppDatabase
 import com.lucreziacarena.mycoachassistant.repository.api.ApiHelper
+import com.lucreziacarena.mycoachassistant.repository.models.AthleteModel
+import com.lucreziacarena.mycoachassistant.repository.models.toDbEntity
 import com.lucreziacarena.mycoachassistant.repository.models.toDomain
 import com.lucreziacarena.mycoachassistant.repository.results.AthletesError
 import com.lucreziacarena.mycoachassistant.repository.results.DataState
@@ -13,7 +15,7 @@ import java.util.*
 import javax.inject.Inject
 
 interface Repository {
-    suspend fun getAthelticsList(): Flow<DataState<List<Athlete>>>
+    suspend fun getAthelticsList(): Flow<DataState<List<AthleteModel>>>
 
 }
 
@@ -27,7 +29,7 @@ class RepositoryImpl @Inject constructor(
         private const val ATHLETES_CACHE_TIME: Long = 1000 * 60 * 60 * 12 //6 hours
     }
 
-    override suspend fun getAthelticsList(): Flow<DataState<List<Athlete>>> {
+    override suspend fun getAthelticsList(): Flow<DataState<List<AthleteModel>>> {
         return flow {
             try {
                 emit(DataState.Loading)
@@ -35,11 +37,13 @@ class RepositoryImpl @Inject constructor(
                 val lastTimeChecked = sharedPreferences.getLongPreference(PreferencesHelper.LAST_NETWORK_LOOKUP)
                 if (now > lastTimeChecked + ATHLETES_CACHE_TIME) { //if is more than 6hours since last time I get athletes from web service
                     val athleteslList = apiHelper.getAthelticsList().results.map { it.toDomain() }
-                    athleteslList.map {athlete ->
-                        database.athleteQueries.insert(athlete)
+                    athleteslList.map {athleteModel ->
+                        database.athleteQueries.insert(athleteModel.toDbEntity())
                     }
                 }
-                val athletesFromDB = database.athleteQueries.selectAll().executeAsList()
+                val athletesFromDB = database.athleteQueries.selectAll().executeAsList().map{
+                    it.toDomain()
+                }
                 if(athletesFromDB.isNullOrEmpty()){
                     emit(DataState.Error(AthletesError.NoAthletesFound))
                 }
@@ -53,3 +57,9 @@ class RepositoryImpl @Inject constructor(
         }
     }
 }
+
+private fun Athlete.toDomain(): AthleteModel {
+    return AthleteModel(this.name?:"", this.surname?:"", this.picture?:"")
+}
+
+
