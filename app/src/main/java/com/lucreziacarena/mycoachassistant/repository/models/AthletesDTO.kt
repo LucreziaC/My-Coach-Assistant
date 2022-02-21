@@ -1,5 +1,4 @@
 package com.lucreziacarena.mycoachassistant.repository.models
-import com.lucreziacarena.mycoachassistant.sql.Athlete
 import kotlinx.serialization.Serializable
 
 @Serializable

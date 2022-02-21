@@ -1,9 +1,5 @@
 package com.lucreziacarena.mycoachassistant.di
 
-import com.lucreziacarena.mycoachassistant.repository.Repository
-import com.lucreziacarena.mycoachassistant.repository.RepositoryImpl
-import com.lucreziacarena.mycoachassistant.repository.api.ApiHelper
-import com.lucreziacarena.mycoachassistant.repository.api.ApiHelperImpl
 import com.lucreziacarena.mycoachassistant.repository.api.ApiService
 import com.lucreziacarena.mycoachassistant.repository.api.ApiServiceImpl
 import dagger.Module
@@ -15,7 +11,6 @@ import io.ktor.client.engine.android.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import io.ktor.client.features.logging.*
-import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
 
