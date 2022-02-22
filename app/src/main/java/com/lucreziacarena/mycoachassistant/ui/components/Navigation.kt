@@ -1,5 +1,7 @@
 package com.lucreziacarena.mycoachassistant.ui.components
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -15,6 +17,7 @@ import com.lucreziacarena.mycoachassistant.views.LeaderboardScreen
 import com.lucreziacarena.mycoachassistant.views.athletesScreen.AthletesScreen
 import com.lucreziacarena.mycoachassistant.views.sessionScreen.SessionScreen
 
+@RequiresApi(Build.VERSION_CODES.O)
 @ExperimentalMaterial3Api
 @Composable
 fun Navigation(navController: NavHostController, bottomBarState: MutableState<Boolean>) {
