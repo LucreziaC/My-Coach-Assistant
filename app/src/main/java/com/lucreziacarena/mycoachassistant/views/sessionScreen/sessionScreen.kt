@@ -4,9 +4,11 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.rememberTransformableState
+import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -17,12 +19,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.constraintlayout.compose.Dimension
 import androidx.navigation.NavController
 import coil.compose.ImagePainter
 import coil.compose.rememberImagePainter
@@ -33,13 +40,14 @@ import com.lucreziacarena.mycoachassistant.utils.Utils
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SessionScreen(navController: NavController, athlete: AthleteModel) {
+fun SessionScreen(navController: NavController, athlete: AthleteModel, meters: Int) {
     val lapTimeList = remember { mutableListOf<String>() }
-    val timeToCompleteLapMap =
-        remember { mutableStateOf(mutableMapOf<Int, Long>()) } // map that match lap number and time to complete it
-    val numLap = remember { mutableStateOf(0) }
+    val timeToCompleteLapMilli =remember { mutableListOf(1L) } // map that match lap number and time to complete it
+    val totalTime = remember { mutableStateOf(1L) }
+    val numLap = remember { mutableStateOf(1) }
+    val sessionIsClosed = remember { mutableStateOf(false) }
     val stopWatch = remember { StopWatch() }
-    var offset =  remember {  mutableStateOf( Offset(0f, 0f))}
+    var pointList = remember { mutableStateOf<ArrayList<Point>>(ArrayList()) }
     val decayAnimationSpec = rememberSplineBasedDecay<Float>()
     val scrollBehavior = remember(decayAnimationSpec) {
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(decayAnimationSpec)
@@ -51,33 +59,78 @@ fun SessionScreen(navController: NavController, athlete: AthleteModel) {
         },
         bottomBar = {
             ControlsBar(
+                sessionIsClosed,
+                pointList,
                 lapTimeList,
                 stopWatch::start,
                 stopWatch::stop,
                 stopWatch::getTimOnLap,
                 numLap,
-                timeToCompleteLapMap,
+                timeToCompleteLapMilli,
+                totalTime
             )
         }
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize()
-        ) {
+        ConstraintLayout(modifier = Modifier.fillMaxSize()) {
+
+            val (stopwatch, timelist,stats) = createRefs()
             StopWatchDisplay(
                 formattedTime = stopWatch.formattedTime,
-                modifier = Modifier.padding(10.dp)
+                modifier = Modifier
+                    .padding(10.dp)
+                    .constrainAs(stopwatch) {
+                        top.linkTo(parent.top)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    }
             )
-            Text(text = "Times List")
-            //CHART
-            drawChart(timeToCompleteLapMap.value, offset)
-            LazyColumn {
-                item {
 
-                }
-                items(items = lapTimeList ?: emptyList()) { time: String ->
-                    Text(time)
+            Column(
+                modifier = Modifier.constrainAs(timelist) {
+                    top.linkTo(stopwatch.bottom)
+                    end.linkTo(stats.start)
+                    width = Dimension.fillToConstraints
+                },
 
+                ) {
+                Text(text = "Times List", fontSize = 20.sp, fontWeight = FontWeight.Bold,modifier = Modifier.padding(bottom = 4.dp))
+                //drawChart(timeToCompleteLapMap.value, pointList.value)
+                LazyColumn {
+                    itemsIndexed(items = lapTimeList) { index, time: String ->
+                        Text("Lap ${index + 1}: $time")
+                    }
                 }
             }
+            Column( modifier = Modifier.constrainAs(stats) {
+                top.linkTo(timelist.top)
+                end.linkTo(parent.end)
+                start.linkTo(timelist.start)
+                width = Dimension.fillToConstraints
+
+
+            } ){
+                Text(text = "Stats", fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
+                //drawChart(timeToCompleteLapMap.value, pointList.value)
+                val speedMax = timeToCompleteLapMilli.map{time->
+                    meters/time
+                }.maxOrNull()
+                if (speedMax != null) {
+                    info("Peak speed: ", "${speedMax.toDouble()} m/s")
+                }
+                    //average time/lap
+                if(numLap.value>0) {
+                    val averageTimeLap = totalTime.value / numLap.value
+                    info("Average time/lap: ", "${averageTimeLap.toDouble()}")
+                }
+                    //average speed
+                    val averageSpeed = (numLap.value*meters)/totalTime.value
+                    info("Average speed: ","${averageSpeed.toDouble()}")
+
+            }
+
+            //CHART
+            /*if(draw.value)
+                LineChart( pointList)*/
 
 
         }
@@ -85,42 +138,14 @@ fun SessionScreen(navController: NavController, athlete: AthleteModel) {
 }
 
 @Composable
-fun drawChart(map: MutableMap<Int, Long>, offset: MutableState<Offset>) {
-    if (map.isEmpty()) {
-        return
+fun info(label: String, stat: String) {
+    Row{
+        Text(label)
+        Text(stat)
     }
-    Canvas(
-        modifier = Modifier
-            .height(250.dp)
-            .fillMaxWidth()
-            .padding(12.dp)
-    ) {
 
-        //total number of lap
-        val totalLap = map.size
-
-        //distance between dots
-        val lineDistance = size.width / (totalLap + 1)
-
-        //canvasHeight
-        val cHeight = size.height
-
-        // Add some kind of a "Padding" for the initial point where the line starts.
-        var currentLineDistance = 0F + lineDistance
-
-        
-        map.map { entry ->
-            val newOffset = Offset(entry.key.toFloat(), (entry.value/1000).toFloat()) //time in sec
-            drawLine(
-                start = offset.value,
-                end = newOffset,
-                color = Color.Black
-            )
-            offset.value = newOffset
-
-        }
-    }
 }
+
 
 @Composable
 fun StopWatchDisplay(
@@ -128,7 +153,7 @@ fun StopWatchDisplay(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier,
+        modifier = modifier,
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -195,12 +220,15 @@ sealed class BottomBarItem(var name: String, var icon: ImageVector?) {
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ControlsBar(
+    sessionIsClosed: MutableState<Boolean>,
+    pointList: MutableState<ArrayList<Point>>,
     lapTimesList: MutableList<String>,
     onstartClick: () -> Unit,
     onStopClick: () -> Unit,
-    onLapClick: () -> Long,
+    getCurrentTime: () -> Long,
     numLap: MutableState<Int>,
-    timeToCompleteLapMap: MutableState<MutableMap<Int, Long>>,
+    timeToCompleteLapMap: MutableList<Long>,
+    totalTime: MutableState<Long>,
 ) {
     val items = listOf(
         BottomBarItem.Stop,
@@ -228,26 +256,96 @@ fun ControlsBar(
                 onClick = {
                     when (item) {
                         BottomBarItem.Lap -> {
-                            numLap.value ++
-                            val lapInMilli = onLapClick()
-                            lapTimesList.add(Utils.formatTime(lapInMilli)) //add to times list current value
-                            if (timeToCompleteLapMap.value.isNotEmpty() && timeToCompleteLapMap.value[numLap.value - 1] != null) {
-                                timeToCompleteLapMap.value[numLap.value] =
-                                    lapInMilli - timeToCompleteLapMap.value[numLap.value - 1]!! //insert time spent to complete last lap
+                            numLap.value++
+                            totalTime.value = getCurrentTime()
+                            if (timeToCompleteLapMap.isNotEmpty() && timeToCompleteLapMap[numLap.value - 1] != null) {
+                                // time spent to complete lap in a map with key = lap number and value = millisec
+                                timeToCompleteLapMap[numLap.value] =
+                                    totalTime.value - timeToCompleteLapMap[numLap.value - 1]!!
+                                //point for chart
+                                pointList.value.add(
+                                    Point(
+                                        numLap.value.toFloat(),
+                                        ((totalTime.value - timeToCompleteLapMap[numLap.value - 1]) / 1000).toFloat()
+                                    )
+                                )
+                                // lap time in list
+                                lapTimesList.add(Utils.formatTime((totalTime.value - timeToCompleteLapMap[numLap.value - 1])))
                             } else {
-                                timeToCompleteLapMap.value[numLap.value] = lapInMilli
+                                timeToCompleteLapMap[numLap.value] = totalTime.value
+                                pointList.value.add(Point(numLap.value.toFloat(), (totalTime.value / 1000).toFloat()))
+                                lapTimesList.add(Utils.formatTime(totalTime.value))
                             }
 
                         }
                         BottomBarItem.Start -> {
                             onstartClick()
-                            numLap.value = 1
+                            numLap.value = 0
                         }
-                        BottomBarItem.Stop -> onStopClick()
+                        BottomBarItem.Stop -> {
+                            totalTime.value = getCurrentTime()
+                            lapTimesList.add(Utils.formatTime((totalTime.value - timeToCompleteLapMap[numLap.value - 1])))
+                            sessionIsClosed.value = true
+                            onStopClick()
+                        }
                     }
                 }
             )
         }
 
+    }
+}
+
+data class Point(val X: Float = 0f, val Y: Float = 0f)
+
+
+@Composable
+fun LineChart(pointList: MutableState<ArrayList<Point>>) {
+    // Used to record the zoom size
+    var scale by remember { mutableStateOf(1f) }
+    val state = rememberTransformableState { zoomChange, panChange, rotationChange ->
+        scale *= zoomChange
+    }
+    val point = pointList.value
+
+    val path = Path()
+    for ((index, item) in point.withIndex()) {
+        val x = item.X * 50
+        val y = (item.Y * 50) - 300
+        if (index == 0) {
+            path.moveTo(x, -y)
+        } else {
+            path.lineTo(x, -y)
+        }
+    }
+
+    Canvas(
+        modifier = Modifier
+            .height(120.dp)
+            .background(Color.White)
+            // Monitor gesture scaling
+            .graphicsLayer(
+            ).transformable(state)
+    ) {
+        // draw  y Axis
+        drawLine(
+            start = Offset(10f, 300f),
+            end = Offset(10f, 0f),
+            color = Color.Black,
+            strokeWidth = 2f
+        )
+        // x Axis
+        drawLine(
+            start = Offset(10f, 300f),
+            end = Offset(510f, 300f),
+            color = Color.Black,
+            strokeWidth = 2f
+        )
+        // draw path
+        drawPath(
+            path = path,
+            color = Color.Blue,
+            style = Stroke(width = 2f)
+        )
     }
 }

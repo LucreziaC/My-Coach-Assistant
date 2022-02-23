@@ -24,8 +24,8 @@ class AthletesViewModel @Inject constructor(
 
     fun send(event: AthleteScreenEvent) {
         when(event){
-            AthleteScreenEvent.InsertedMeters -> {
-                action.value = AthleteScreenAction.NavigateToSessionScreen
+            is AthleteScreenEvent.InsertedMeters -> {
+                action.value = AthleteScreenAction.NavigateToSessionScreen(event.meters)
             }
             AthleteScreenEvent.Init -> {
                 action.value = AthleteScreenAction.NoAction
@@ -61,13 +61,13 @@ sealed class States {
 }
 
 sealed class AthleteScreenEvent{
-    object InsertedMeters : AthleteScreenEvent()
+    data class InsertedMeters(val meters: Int) : AthleteScreenEvent()
     object Init : AthleteScreenEvent()
 }
 
 
 sealed class AthleteScreenAction{
-    object NavigateToSessionScreen : AthleteScreenAction()
+    data class NavigateToSessionScreen(val meters: Int) : AthleteScreenAction()
     object NoAction : AthleteScreenAction()
 }
 

@@ -31,18 +31,25 @@ fun Navigation(navController: NavHostController, bottomBarState: MutableState<Bo
             LeaderboardScreen()
         }
         composable(
-            route = NavigationItem.Session.route + "?athlete={athlete}",
+            route = NavigationItem.Session.route + "?athlete={athlete}&meters={meters}",
             arguments = listOf(
                 navArgument("athlete") {
                     type = NavType.StringType
                     nullable = true
-                })
-        ){backStackEntry ->
-                val athleteJson = backStackEntry.arguments?.getString("athlete")
-                val athlete = Gson().fromJson(athleteJson, AthleteModel::class.java)
-                bottomBarState.value = false
-                SessionScreen(navController = navController,athlete)
+                },
+                navArgument("meters") {
+                    type = NavType.IntType
+                },
+            )
+        ) { backStackEntry ->
+            val athleteJson = backStackEntry.arguments?.getString("athlete")
+            val meters = backStackEntry.arguments?.getInt("meters")
+            val athlete = Gson().fromJson(athleteJson, AthleteModel::class.java)
+            bottomBarState.value = false
+            if (meters != null) {
+                SessionScreen(navController = navController, athlete, meters)
             }
+        }
 
     }
 }

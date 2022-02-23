@@ -30,6 +30,7 @@ fun AthletesScreen(navController: NavController) {
     val errorMessage = remember { mutableStateOf("") }
     val showErrorDialog = remember { mutableStateOf(false) }
     val showLoading = remember { mutableStateOf(false) }
+    val meters = remember { mutableStateOf(0) }
     val athleteChosen: MutableState<AthleteModel?> = remember { mutableStateOf(null) }
     observeStates(viewModel.state.value, athletesList, errorMessage, showErrorDialog, showLoading)
     observeAction(viewModel,viewModel.action.value, athleteChosen,navController)
@@ -68,7 +69,8 @@ fun AthletesScreen(navController: NavController) {
                     TextButton(
                         onClick = {
                             openDialog.value = false
-                            viewModel.send(AthleteScreenEvent.InsertedMeters)
+                            meters.value = text.toInt()
+                            viewModel.send(AthleteScreenEvent.InsertedMeters(meters.value))
                         }
                     ) {
                         Surface {
@@ -97,9 +99,9 @@ fun AthletesScreen(navController: NavController) {
 
 fun observeAction(viewModel: AthletesViewModel,action: AthleteScreenAction, athleteChosen: MutableState<AthleteModel?>, navController: NavController) {
     when(action){
-        AthleteScreenAction.NavigateToSessionScreen -> {
+        is AthleteScreenAction.NavigateToSessionScreen -> {
             val athlete = Gson().toJson(athleteChosen.value)
-            navController.navigate(NavigationItem.Session.route + "?athlete=$athlete")
+            navController.navigate(NavigationItem.Session.route + "?athlete=$athlete&meters=${action.meters}")
             viewModel.send(AthleteScreenEvent.Init)
         }
         AthleteScreenAction.NoAction -> {}
