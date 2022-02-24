@@ -19,6 +19,7 @@ class AthletesViewModel @Inject constructor(
     val repository: Repository
 ) : ViewModel() {
 
+    val state: MutableState<States> = mutableStateOf(States.Empty)
     val action: MutableState<AthleteScreenAction> =
         mutableStateOf(AthleteScreenAction.NoAction)
 
@@ -33,7 +34,6 @@ class AthletesViewModel @Inject constructor(
         }
     }
 
-    val state: MutableState<States> = mutableStateOf(States.Empty)
 
     init {
         viewModelScope.launch {

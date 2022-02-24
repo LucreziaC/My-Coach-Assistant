@@ -26,26 +26,33 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.ImagePainter
 import coil.compose.rememberImagePainter
 import com.lucreziacarena.mycoachassistant.R
 import com.lucreziacarena.mycoachassistant.repository.models.AthleteModel
 import com.lucreziacarena.mycoachassistant.utils.Utils
+import com.lucreziacarena.mycoachassistant.views.athletesScreen.States
 import java.text.DecimalFormat
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionScreen(navController: NavController, athlete: AthleteModel, meters: Int) {
+    val viewModel = hiltViewModel<SessionScreenViewModel>()
     val lapTimeList = remember { mutableListOf<String>() }
-    val lapTimeMap = remember { mutableStateOf( mutableMapOf<Int,Long>() )} // map that match lap number and time to complete it
+    val lapTimeMap =
+        remember { mutableStateOf(mutableMapOf<Int, Long>()) } // map that match lap number and time to complete it
     val totalTime = remember { mutableStateOf(1L) }
     val numLap = remember { mutableStateOf(1) }
     val lastTimeRecorded = remember { mutableStateOf(0L) }
     val sessionIsClosed = remember { mutableStateOf(false) }
+    val loading = remember { mutableStateOf(false) }
     val stopWatch = remember { StopWatch() }
     var pointList = remember { mutableStateOf<ArrayList<Point>>(ArrayList()) }
+    var speedMax by remember { mutableStateOf(0L) }
+
     val decayAnimationSpec = rememberSplineBasedDecay<Float>()
     val scrollBehavior = remember(decayAnimationSpec) {
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(decayAnimationSpec)
@@ -70,6 +77,8 @@ fun SessionScreen(navController: NavController, athlete: AthleteModel, meters: I
             )
         }
     ) {
+
+        observeStates(viewModel.state, navController,loading)
         ConstraintLayout(modifier = Modifier.fillMaxSize()) {
 
             val (stopwatch, stats, chart) = createRefs()
@@ -83,85 +92,85 @@ fun SessionScreen(navController: NavController, athlete: AthleteModel, meters: I
                         end.linkTo(parent.end)
                     }
             )
-            Row(modifier = Modifier
-                .constrainAs(stats) {
-                top.linkTo(stopwatch.bottom)
-                start.linkTo(parent.start)
-                end.linkTo(parent.end)
-            },
+            Row(
+                modifier = Modifier
+                    .constrainAs(stats) {
+                        top.linkTo(stopwatch.bottom)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    },
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                Text(
-                    text = "Times List",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-                //drawChart(timeToCompleteLapMap.value, pointList.value)
-                LazyColumn {
-                    itemsIndexed(items = lapTimeList) { index, time: String ->
-                        Text("Lap ${index + 1}: $time")
+                    Text(
+                        text = "Times List",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    //drawChart(timeToCompleteLapMap.value, pointList.value)
+                    LazyColumn {
+                        itemsIndexed(items = lapTimeList) { index, time: String ->
+                            Text("Lap ${index + 1}: $time")
+                        }
                     }
                 }
-            }
 
                 Spacer(modifier = Modifier.width(50.dp))
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Stats",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-                //drawChart(timeToCompleteLapMap.value, pointList.value)
-                val timesInMillis = mutableListOf<Long>()
-                val meter = 100
-                lapTimeMap.value.forEach { (key, value) -> timesInMillis.add(value) }
-                var speedMax by remember { mutableStateOf(0L) }
-                val df = DecimalFormat("###.##")
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Stats",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    //drawChart(timeToCompleteLapMap.value, pointList.value)
+                    val timesInMillis = mutableListOf<Long>()
+                    val meter = 100
+                    lapTimeMap.value.forEach { (key, value) -> timesInMillis.add(value) }
+                    val df = DecimalFormat("###.##")
 
-                timesInMillis.map {
-                    try {
-                        val speed = meters / (it / 1000)
-                        if (speed > speedMax)
-                            speedMax = (it / 1000)
-                    }catch(e:Exception){
-                        e.printStackTrace()
+                    timesInMillis.map {
+                        try {
+                            val speed = meters / (it / 1000)
+                            if (speed > speedMax)
+                                speedMax = (it / 1000)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     }
-                }
-                if (speedMax != null) {
-                   info("Peak speed: ", "${speedMax.toDouble()} m/s")
-               }
-              //average time/lap
-               if (numLap.value > 0) {
-                   val averageTimeLap = df.format((totalTime.value / 1000).toDouble() / numLap.value)
+                    if (speedMax != null) {
+                        info("Peak speed: ", "${speedMax.toDouble()} m/s")
+                    }
+                    //average time/lap
+                    if (numLap.value > 0) {
+                        val averageTimeLap = df.format((totalTime.value / 1000).toDouble() / numLap.value)
 
-                   info("Average time/lap: ", averageTimeLap)
-               }
-               //average speed
-               val averageSpeed = df.format((numLap.value * meter) / (totalTime.value/1000).toDouble())
-               info("Average speed: ", averageSpeed)
-            }
+                        info("Average time/lap: ", averageTimeLap)
+                    }
+                    //average speed
+                    val averageSpeed = df.format((numLap.value * meter) / (totalTime.value / 1000).toDouble())
+                    info("Average speed: ", averageSpeed)
+                }
             }
             Spacer(Modifier.height(60.dp))
 
             //CHART
-            if(sessionIsClosed.value)
-                LineChart( pointList, Modifier
-                    .height(120.dp)
-                    .background(Color.Blue)
-                    .constrainAs(chart){
+            if (sessionIsClosed.value) {
+                LineChart(pointList, Modifier
+                    .height(300.dp)
+                    .padding(20.dp)
+                    .constrainAs(chart) {
                         top.linkTo(stats.bottom)
-                        start.linkTo(parent.start)
-                        end.linkTo(parent.end)
+                        start.linkTo(stopwatch.start)
+                        end.linkTo(stopwatch.end)
                     })
-
-
+                viewModel.send(SessionScreenEvent.OnCloseSession(athlete, numLap.value, speedMax ))
+            }
         }
     }
 }
@@ -288,10 +297,10 @@ fun ControlsBar(
                         BottomBarItem.Lap -> {
                             numLap.value++
                             totalTime.value = getCurrentTime()
-                            if (lapTimeMap.value.isNotEmpty() && lastTimeRecorded.value!=0L) {
+                            if (lapTimeMap.value.isNotEmpty() && lastTimeRecorded.value != 0L) {
                                 val newTime = totalTime.value - lastTimeRecorded.value
                                 // time spent to complete lap in a map with key = lap number and value = millisec
-                                lapTimeMap.value[numLap.value] =newTime
+                                lapTimeMap.value[numLap.value] = newTime
                                 //point for chart
                                 pointList.value.add(
                                     Point(
@@ -320,6 +329,7 @@ fun ControlsBar(
                             lapTimesList.add(Utils.formatTime(newTime))
                             sessionIsClosed.value = true
                             onStopClick()
+
                         }
                     }
                 }
@@ -349,7 +359,7 @@ fun LineChart(pointList: MutableState<ArrayList<Point>>, modifier: Modifier) {
     }
 
     Canvas(
-        modifier =modifier
+        modifier = modifier
     ) {
         // draw  y Axis
         drawLine(
@@ -371,5 +381,28 @@ fun LineChart(pointList: MutableState<ArrayList<Point>>, modifier: Modifier) {
             color = Color.Blue,
             style = Stroke(width = 2f)
         )
+    }
+}
+
+
+fun observeStates(
+    state: MutableState<SessionState>,
+    navController: NavController,
+    showLoading: MutableState<Boolean>
+) {
+    when (state.value) {
+        is SessionState.Content -> {
+            showLoading.value = false
+            navController.popBackStack()
+
+        }
+        SessionState.Empty -> {
+            showLoading.value = false
+        }
+        is SessionState.Error -> {
+            showLoading.value = false
+
+        }
+        SessionState.Loading -> showLoading.value = true
     }
 }
