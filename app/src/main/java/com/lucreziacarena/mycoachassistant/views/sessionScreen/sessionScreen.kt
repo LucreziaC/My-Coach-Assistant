@@ -4,8 +4,6 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.rememberSplineBasedDecay
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.rememberTransformableState
-import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -21,7 +19,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
@@ -29,22 +26,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.Dimension
 import androidx.navigation.NavController
 import coil.compose.ImagePainter
 import coil.compose.rememberImagePainter
 import com.lucreziacarena.mycoachassistant.R
 import com.lucreziacarena.mycoachassistant.repository.models.AthleteModel
 import com.lucreziacarena.mycoachassistant.utils.Utils
+import java.text.DecimalFormat
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionScreen(navController: NavController, athlete: AthleteModel, meters: Int) {
     val lapTimeList = remember { mutableListOf<String>() }
-    val timeToCompleteLapMilli =remember { mutableListOf(1L) } // map that match lap number and time to complete it
+    val lapTimeMap = remember { mutableStateOf( mutableMapOf<Int,Long>() )} // map that match lap number and time to complete it
     val totalTime = remember { mutableStateOf(1L) }
     val numLap = remember { mutableStateOf(1) }
+    val lastTimeRecorded = remember { mutableStateOf(0L) }
     val sessionIsClosed = remember { mutableStateOf(false) }
     val stopWatch = remember { StopWatch() }
     var pointList = remember { mutableStateOf<ArrayList<Point>>(ArrayList()) }
@@ -66,14 +64,15 @@ fun SessionScreen(navController: NavController, athlete: AthleteModel, meters: I
                 stopWatch::stop,
                 stopWatch::getTimOnLap,
                 numLap,
-                timeToCompleteLapMilli,
-                totalTime
+                lapTimeMap,
+                totalTime,
+                lastTimeRecorded
             )
         }
     ) {
         ConstraintLayout(modifier = Modifier.fillMaxSize()) {
 
-            val (stopwatch, timelist,stats) = createRefs()
+            val (stopwatch, stats, chart) = createRefs()
             StopWatchDisplay(
                 formattedTime = stopWatch.formattedTime,
                 modifier = Modifier
@@ -84,16 +83,23 @@ fun SessionScreen(navController: NavController, athlete: AthleteModel, meters: I
                         end.linkTo(parent.end)
                     }
             )
-
+            Row(modifier = Modifier
+                .constrainAs(stats) {
+                top.linkTo(stopwatch.bottom)
+                start.linkTo(parent.start)
+                end.linkTo(parent.end)
+            },
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
             Column(
-                modifier = Modifier.constrainAs(timelist) {
-                    top.linkTo(stopwatch.bottom)
-                    end.linkTo(stats.start)
-                    width = Dimension.fillToConstraints
-                },
-
+                horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                Text(text = "Times List", fontSize = 20.sp, fontWeight = FontWeight.Bold,modifier = Modifier.padding(bottom = 4.dp))
+                Text(
+                    text = "Times List",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
                 //drawChart(timeToCompleteLapMap.value, pointList.value)
                 LazyColumn {
                     itemsIndexed(items = lapTimeList) { index, time: String ->
@@ -101,36 +107,59 @@ fun SessionScreen(navController: NavController, athlete: AthleteModel, meters: I
                     }
                 }
             }
-            Column( modifier = Modifier.constrainAs(stats) {
-                top.linkTo(timelist.top)
-                end.linkTo(parent.end)
-                start.linkTo(timelist.start)
-                width = Dimension.fillToConstraints
 
-
-            } ){
-                Text(text = "Stats", fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 4.dp))
+                Spacer(modifier = Modifier.width(50.dp))
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Stats",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
                 //drawChart(timeToCompleteLapMap.value, pointList.value)
-                val speedMax = timeToCompleteLapMilli.map{time->
-                    meters/time
-                }.maxOrNull()
-                if (speedMax != null) {
-                    info("Peak speed: ", "${speedMax.toDouble()} m/s")
-                }
-                    //average time/lap
-                if(numLap.value>0) {
-                    val averageTimeLap = totalTime.value / numLap.value
-                    info("Average time/lap: ", "${averageTimeLap.toDouble()}")
-                }
-                    //average speed
-                    val averageSpeed = (numLap.value*meters)/totalTime.value
-                    info("Average speed: ","${averageSpeed.toDouble()}")
+                val timesInMillis = mutableListOf<Long>()
+                val meter = 100
+                lapTimeMap.value.forEach { (key, value) -> timesInMillis.add(value) }
+                var speedMax by remember { mutableStateOf(0L) }
+                val df = DecimalFormat("###.##")
 
+                timesInMillis.map {
+                    try {
+                        val speed = meters / (it / 1000)
+                        if (speed > speedMax)
+                            speedMax = (it / 1000)
+                    }catch(e:Exception){
+                        e.printStackTrace()
+                    }
+                }
+                if (speedMax != null) {
+                   info("Peak speed: ", "${speedMax.toDouble()} m/s")
+               }
+              //average time/lap
+               if (numLap.value > 0) {
+                   val averageTimeLap = df.format((totalTime.value / 1000).toDouble() / numLap.value)
+
+                   info("Average time/lap: ", averageTimeLap)
+               }
+               //average speed
+               val averageSpeed = df.format((numLap.value * meter) / (totalTime.value/1000).toDouble())
+               info("Average speed: ", averageSpeed)
             }
+            }
+            Spacer(Modifier.height(60.dp))
 
             //CHART
-            /*if(draw.value)
-                LineChart( pointList)*/
+            if(sessionIsClosed.value)
+                LineChart( pointList, Modifier
+                    .height(120.dp)
+                    .background(Color.Blue)
+                    .constrainAs(chart){
+                        top.linkTo(stats.bottom)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    })
 
 
         }
@@ -139,7 +168,7 @@ fun SessionScreen(navController: NavController, athlete: AthleteModel, meters: I
 
 @Composable
 fun info(label: String, stat: String) {
-    Row{
+    Row {
         Text(label)
         Text(stat)
     }
@@ -227,8 +256,9 @@ fun ControlsBar(
     onStopClick: () -> Unit,
     getCurrentTime: () -> Long,
     numLap: MutableState<Int>,
-    timeToCompleteLapMap: MutableList<Long>,
+    lapTimeMap: MutableState<MutableMap<Int, Long>>,
     totalTime: MutableState<Long>,
+    lastTimeRecorded: MutableState<Long>,
 ) {
     val items = listOf(
         BottomBarItem.Stop,
@@ -258,21 +288,23 @@ fun ControlsBar(
                         BottomBarItem.Lap -> {
                             numLap.value++
                             totalTime.value = getCurrentTime()
-                            if (timeToCompleteLapMap.isNotEmpty() && timeToCompleteLapMap[numLap.value - 1] != null) {
+                            if (lapTimeMap.value.isNotEmpty() && lastTimeRecorded.value!=0L) {
+                                val newTime = totalTime.value - lastTimeRecorded.value
                                 // time spent to complete lap in a map with key = lap number and value = millisec
-                                timeToCompleteLapMap[numLap.value] =
-                                    totalTime.value - timeToCompleteLapMap[numLap.value - 1]!!
+                                lapTimeMap.value[numLap.value] =newTime
                                 //point for chart
                                 pointList.value.add(
                                     Point(
                                         numLap.value.toFloat(),
-                                        ((totalTime.value - timeToCompleteLapMap[numLap.value - 1]) / 1000).toFloat()
+                                        (newTime / 1000).toFloat() //in second
                                     )
                                 )
                                 // lap time in list
-                                lapTimesList.add(Utils.formatTime((totalTime.value - timeToCompleteLapMap[numLap.value - 1])))
-                            } else {
-                                timeToCompleteLapMap[numLap.value] = totalTime.value
+                                lapTimesList.add(Utils.formatTime(newTime))
+                                lastTimeRecorded.value = totalTime.value
+                            } else { // è il primo tempo registrato
+                                lastTimeRecorded.value = totalTime.value
+                                lapTimeMap.value[numLap.value] = totalTime.value
                                 pointList.value.add(Point(numLap.value.toFloat(), (totalTime.value / 1000).toFloat()))
                                 lapTimesList.add(Utils.formatTime(totalTime.value))
                             }
@@ -284,7 +316,8 @@ fun ControlsBar(
                         }
                         BottomBarItem.Stop -> {
                             totalTime.value = getCurrentTime()
-                            lapTimesList.add(Utils.formatTime((totalTime.value - timeToCompleteLapMap[numLap.value - 1])))
+                            val newTime = totalTime.value - lastTimeRecorded.value
+                            lapTimesList.add(Utils.formatTime(newTime))
                             sessionIsClosed.value = true
                             onStopClick()
                         }
@@ -300,12 +333,8 @@ data class Point(val X: Float = 0f, val Y: Float = 0f)
 
 
 @Composable
-fun LineChart(pointList: MutableState<ArrayList<Point>>) {
-    // Used to record the zoom size
-    var scale by remember { mutableStateOf(1f) }
-    val state = rememberTransformableState { zoomChange, panChange, rotationChange ->
-        scale *= zoomChange
-    }
+fun LineChart(pointList: MutableState<ArrayList<Point>>, modifier: Modifier) {
+
     val point = pointList.value
 
     val path = Path()
@@ -320,12 +349,7 @@ fun LineChart(pointList: MutableState<ArrayList<Point>>) {
     }
 
     Canvas(
-        modifier = Modifier
-            .height(120.dp)
-            .background(Color.White)
-            // Monitor gesture scaling
-            .graphicsLayer(
-            ).transformable(state)
+        modifier =modifier
     ) {
         // draw  y Axis
         drawLine(
