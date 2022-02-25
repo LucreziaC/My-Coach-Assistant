@@ -19,3 +19,18 @@ DELETE FROM athlete;
 
 
 
+CREATE TABLE athleteSession(
+    name    TEXT,
+    surname TEXT,
+    picture TEXT,
+    peakSpeed INTEGER ,
+    numLap INTEGER,
+    PRIMARY KEY(name,surname)
+);
+insertAthletSession:
+INSERT OR REPLACE INTO athleteSession(name, surname, picture, peakSpeed, numLap)
+VALUES (?,?,?,?,?);
+
+
+
+

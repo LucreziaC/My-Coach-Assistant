@@ -16,6 +16,7 @@ import javax.inject.Inject
 
 interface Repository {
     suspend fun getAthelticsList(): Flow<DataState<List<AthleteModel>>>
+    suspend fun saveAthletStats(athlete: AthleteModel, numLap: Int, speedMax: Long): Flow<DataState<Boolean>>
 
 }
 
@@ -52,6 +53,18 @@ class RepositoryImpl @Inject constructor(
                     emit(DataState.Success(data = athletesFromDB))
                 }
                sharedPreferences.setLongPreference(PreferencesHelper.LAST_NETWORK_LOOKUP, now)
+            } catch (e: Exception) {
+                emit(DataState.Error(AthletesError.GenericError(e.message ?: "Error")))
+            }
+        }
+    }
+
+    override suspend fun saveAthletStats(athlete: AthleteModel, numLap: Int, speedMax: Long): Flow<DataState<Boolean>> {
+        return flow {
+            try {
+                emit(DataState.Loading)
+                database.athleteQueries.insertAthletSession(athlete.name, athlete.surname, athlete.picture, speedMax, numLap.toLong())
+                emit(DataState.Success(data = true))
             } catch (e: Exception) {
                 emit(DataState.Error(AthletesError.GenericError(e.message ?: "Error")))
             }

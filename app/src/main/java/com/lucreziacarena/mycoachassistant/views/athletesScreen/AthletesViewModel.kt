@@ -1,7 +1,6 @@
 package com.lucreziacarena.mycoachassistant.views.athletesScreen
 
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,7 +18,22 @@ import javax.inject.Inject
 class AthletesViewModel @Inject constructor(
     val repository: Repository
 ) : ViewModel() {
+
     val state: MutableState<States> = mutableStateOf(States.Empty)
+    val action: MutableState<AthleteScreenAction> =
+        mutableStateOf(AthleteScreenAction.NoAction)
+
+    fun send(event: AthleteScreenEvent) {
+        when(event){
+            is AthleteScreenEvent.InsertedMeters -> {
+                action.value = AthleteScreenAction.NavigateToSessionScreen(event.meters)
+            }
+            AthleteScreenEvent.Init -> {
+                action.value = AthleteScreenAction.NoAction
+            }
+        }
+    }
+
 
     init {
         viewModelScope.launch {
@@ -46,4 +60,14 @@ sealed class States {
     object Empty: States()
 }
 
+sealed class AthleteScreenEvent{
+    data class InsertedMeters(val meters: Int) : AthleteScreenEvent()
+    object Init : AthleteScreenEvent()
+}
+
+
+sealed class AthleteScreenAction{
+    data class NavigateToSessionScreen(val meters: Int) : AthleteScreenAction()
+    object NoAction : AthleteScreenAction()
+}
 
