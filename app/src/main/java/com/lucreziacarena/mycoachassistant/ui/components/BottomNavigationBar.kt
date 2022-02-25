@@ -4,10 +4,10 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -35,7 +35,7 @@ fun BottomNavigationBar(navController: NavController, bottomBarState: MutableSta
     )
     {
         NavigationBar(
-            containerColor = MaterialTheme.colors.primary,
+            containerColor = androidx.compose.material3.MaterialTheme.colorScheme.primary,
             contentColor = White,
             tonalElevation = 5.dp
         ) {
@@ -44,7 +44,7 @@ fun BottomNavigationBar(navController: NavController, bottomBarState: MutableSta
             items.forEach { item ->
                 NavigationBarItem(
                     icon = { Icon(item.icon ?: Icons.Filled.Close, contentDescription = item.title) },
-                    label = { Text(text = item.title) },
+                    label = { Text(text = item.title, color = MaterialTheme.colorScheme.onPrimary) },
                     colors = NavigationBarItemDefaults.colors(selectedIconColor = Color.White, unselectedIconColor = Color.White.copy(0.4f)),
                     alwaysShowLabel = true,
                     selected = currentRoute == item.route,

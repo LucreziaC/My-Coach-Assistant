@@ -1,8 +1,10 @@
 package com.lucreziacarena.mycoachassistant
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Scaffold
@@ -16,9 +18,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.lucreziacarena.mycoachassistant.ui.theme.MyCoachAssistantTheme
 import com.lucreziacarena.mycoachassistant.ui.components.BottomNavigationBar
 import com.lucreziacarena.mycoachassistant.ui.components.Navigation
-import com.lucreziacarena.mycoachassistant.ui.theme.MyCoachAssistantTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 
@@ -36,6 +38,7 @@ class MainActivity : ComponentActivity() {
 
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
