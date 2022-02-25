@@ -19,23 +19,27 @@ class LeaderboardViewModel @Inject constructor(
 ) : ViewModel() {
 
     val state: MutableState<LeaderboardStates> = mutableStateOf(LeaderboardStates.Empty)
-    val action: MutableState<AthleteScreenAction> =
-        mutableStateOf(AthleteScreenAction.NoAction)
+    /*val action: MutableState<AthleteScreenAction> =
+        mutableStateOf(AthleteScreenAction.NoAction)*/
 
-    fun send(event: AthleteScreenEvent) {
-        when(event){
-            is AthleteScreenEvent.InsertedMeters -> {
-                action.value = AthleteScreenAction.NavigateToSessionScreen(event.meters)
-            }
-            AthleteScreenEvent.Init -> {
-                action.value = AthleteScreenAction.NoAction
-            }
-        }
-    }
+    /*fun send(event: AthleteScreenEvent) {
+
+    }*/
 
 
     init {
         getAthleteByPeakSpeed()
+    }
+
+    fun send(event: LeaderboardEvents) {
+        when(event){
+            LeaderboardEvents.GetLapsSortedList -> {
+                getAthleteByNumLap()
+            }
+            LeaderboardEvents.GetPeakSortedList -> {
+                getAthleteByPeakSpeed()
+            }
+        }
     }
 
     private fun getAthleteByPeakSpeed() {
@@ -79,14 +83,11 @@ sealed class LeaderboardStates {
     object Empty: LeaderboardStates()
 }
 
-sealed class AthleteScreenEvent{
-    data class InsertedMeters(val meters: Int) : AthleteScreenEvent()
-    object Init : AthleteScreenEvent()
+sealed class LeaderboardEvents {
+    object GetPeakSortedList : LeaderboardEvents()
+    object GetLapsSortedList : LeaderboardEvents()
+
 }
 
 
-sealed class AthleteScreenAction{
-    data class NavigateToSessionScreen(val meters: Int) : AthleteScreenAction()
-    object NoAction : AthleteScreenAction()
-}
 

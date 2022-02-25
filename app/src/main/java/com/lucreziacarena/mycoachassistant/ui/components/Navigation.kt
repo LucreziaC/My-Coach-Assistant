@@ -28,7 +28,7 @@ fun Navigation(navController: NavHostController, bottomBarState: MutableState<Bo
         }
         composable(NavigationItem.Leaderboard.route) {
             bottomBarState.value = true
-            LeaderboardScreen()
+            LeaderboardScreen(navController)
         }
         composable(
             route = NavigationItem.Session.route + "?athlete={athlete}&meters={meters}",

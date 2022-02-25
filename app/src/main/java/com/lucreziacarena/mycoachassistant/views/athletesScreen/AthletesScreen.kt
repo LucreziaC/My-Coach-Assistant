@@ -20,15 +20,13 @@ import com.lucreziacarena.mycoachassistant.navigation.NavigationItem
 import com.lucreziacarena.mycoachassistant.repository.models.AthleteModel
 import com.lucreziacarena.mycoachassistant.repository.results.AthletesError
 import com.lucreziacarena.mycoachassistant.ui.components.TopAppBar
-import com.lucreziacarena.mycoachassistant.views.leaderboardScreen.AthleteScreenAction
-import com.lucreziacarena.mycoachassistant.views.leaderboardScreen.AthleteScreenEvent
 
 
 @ExperimentalMaterial3Api
 @Composable
 fun AthletesScreen(navController: NavController) {
     val viewModel = hiltViewModel<AthletesViewModel>()
-    val athletesList = remember { mutableListOf<AthleteModel>() }
+    val athletesList = remember { viewModel.athletList }
     val errorMessage = remember { mutableStateOf("") }
     val showErrorDialog = remember { mutableStateOf(false) }
     val showLoading = remember { mutableStateOf(false) }
@@ -43,7 +41,7 @@ fun AthletesScreen(navController: NavController) {
     }
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = { TopAppBar("Athlets List", navController = navController, scrollBehavior = scrollBehavior, backNavigation = false) }
+        topBar = { TopAppBar("Athletes List", navController = navController, scrollBehavior = scrollBehavior, backNavigation = false) }
     ) {
 
         val openDialog = remember { mutableStateOf(false) }

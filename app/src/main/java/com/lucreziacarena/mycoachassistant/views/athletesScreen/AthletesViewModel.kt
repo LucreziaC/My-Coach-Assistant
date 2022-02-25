@@ -10,8 +10,6 @@ import com.lucreziacarena.mycoachassistant.repository.results.AthletesError
 import com.lucreziacarena.mycoachassistant.repository.results.DataState
 import com.lucreziacarena.mycoachassistant.views.athletesScreen.States.Content
 import com.lucreziacarena.mycoachassistant.views.athletesScreen.States.Loading
-import com.lucreziacarena.mycoachassistant.views.leaderboardScreen.AthleteScreenAction
-import com.lucreziacarena.mycoachassistant.views.leaderboardScreen.AthleteScreenEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -24,6 +22,8 @@ class AthletesViewModel @Inject constructor(
     val state: MutableState<States> = mutableStateOf(States.Empty)
     val action: MutableState<AthleteScreenAction> =
         mutableStateOf(AthleteScreenAction.NoAction)
+
+    val athletList = mutableListOf<AthleteModel>()
 
     fun send(event: AthleteScreenEvent) {
         when(event){
@@ -47,6 +47,7 @@ class AthletesViewModel @Inject constructor(
                     }
                     is DataState.Success -> {
                         state.value = Content(flowResult.data)
+                        athletList.addAll(flowResult.data)
                     }
                 }
             }

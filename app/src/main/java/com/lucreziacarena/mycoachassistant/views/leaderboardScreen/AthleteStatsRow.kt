@@ -34,7 +34,7 @@ import com.lucreziacarena.mycoachassistant.repository.models.AthleteStatsModel
 
 
 @Composable
-fun AthleteStatsRowItem(athlet: AthleteStatsModel,peakSpeed:Boolean, numLap: Boolean ) {
+fun AthleteStatsRowItem(athlet: AthleteStatsModel, peakSpeed: Boolean, numLap:Boolean ) {
     ConstraintLayout(modifier = Modifier
         .padding(10.dp)
         .fillMaxWidth()
@@ -78,12 +78,12 @@ fun AthleteStatsRowItem(athlet: AthleteStatsModel,peakSpeed:Boolean, numLap: Boo
 
             )
             Text(
-                "peak speed: $peakSpeed",
+                "peak speed: ${athlet.peakSpeed}",
                 fontWeight = if(peakSpeed) FontWeight.Bold else FontWeight.Normal,
                 color = MaterialTheme.colorScheme.onBackground,
             )
             Text(
-                "numLap: $numLap",
+                "numLap: ${athlet.numLap}",
                 fontWeight = if(numLap) FontWeight.Bold else FontWeight.Normal,
                 color = MaterialTheme.colorScheme.onBackground,
 
