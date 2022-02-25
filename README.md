@@ -24,13 +24,12 @@ In the leaderboard screen, coach can see his/her athletes and filter by peak spe
 1. Dialogs
 2. Theming
 3. Colors
-4. Animations introduction
-	- creating a 'shimmering' loading animation
-5. ConstraintLayout
-6. Rows
-7. Columns
-8. Scaffold
-9. AppBar
-10. Circular Progress Indicator
+4. ConstraintLayout
+5. Rows
+6. Columns
+7. Scaffold
+8. AppBar
+9. Circular Progress Indicator
+10. Canvas
 
 
