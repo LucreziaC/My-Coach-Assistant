@@ -63,7 +63,7 @@ class RepositoryImpl @Inject constructor(
         return flow {
             try {
                 emit(DataState.Loading)
-                database.athleteQueries.insertAthletSession(athlete.name, athlete.surname, athlete.picture, numLap, speedMax)
+                database.athleteQueries.insertAthletSession(athlete.name, athlete.surname, athlete.picture, speedMax, numLap.toLong())
                 emit(DataState.Success(data = true))
             } catch (e: Exception) {
                 emit(DataState.Error(AthletesError.GenericError(e.message ?: "Error")))
