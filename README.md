@@ -4,7 +4,6 @@
 This project is a stopwatch app that help a coach to handler his/her athletes result. For each athletes, he/she could start a new session's training in witch he/she starts the stopwatch, inserts every time the athletes completes a lap and stops the session. The screen shows everry lap with its time, the max speed, the average speed and the average time to complete a lap. The session screen show also a chart with the variance of time for every lap 
 In the leaderboard screen, coach can see his/her athletes and filter by peak speed.
 
-**This is a beginner course.**
 
 # Main Features
 1. Kotlin
