@@ -10,6 +10,8 @@ import com.lucreziacarena.mycoachassistant.repository.results.AthletesError
 import com.lucreziacarena.mycoachassistant.repository.results.DataState
 import com.lucreziacarena.mycoachassistant.views.athletesScreen.States.Content
 import com.lucreziacarena.mycoachassistant.views.athletesScreen.States.Loading
+import com.lucreziacarena.mycoachassistant.views.leaderboardScreen.AthleteScreenAction
+import com.lucreziacarena.mycoachassistant.views.leaderboardScreen.AthleteScreenEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject

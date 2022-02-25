@@ -13,7 +13,7 @@ import androidx.navigation.navArgument
 import com.google.gson.Gson
 import com.lucreziacarena.mycoachassistant.navigation.NavigationItem
 import com.lucreziacarena.mycoachassistant.repository.models.AthleteModel
-import com.lucreziacarena.mycoachassistant.views.LeaderboardScreen
+import com.lucreziacarena.mycoachassistant.views.leaderboardScreen.LeaderboardScreen
 import com.lucreziacarena.mycoachassistant.views.athletesScreen.AthletesScreen
 import com.lucreziacarena.mycoachassistant.views.sessionScreen.SessionScreen
 

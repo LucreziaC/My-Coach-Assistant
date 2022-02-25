@@ -20,6 +20,8 @@ import com.lucreziacarena.mycoachassistant.navigation.NavigationItem
 import com.lucreziacarena.mycoachassistant.repository.models.AthleteModel
 import com.lucreziacarena.mycoachassistant.repository.results.AthletesError
 import com.lucreziacarena.mycoachassistant.ui.components.TopAppBar
+import com.lucreziacarena.mycoachassistant.views.leaderboardScreen.AthleteScreenAction
+import com.lucreziacarena.mycoachassistant.views.leaderboardScreen.AthleteScreenEvent
 
 
 @ExperimentalMaterial3Api
@@ -97,7 +99,7 @@ fun AthletesScreen(navController: NavController) {
 
 }
 
-fun observeAction(viewModel: AthletesViewModel,action: AthleteScreenAction, athleteChosen: MutableState<AthleteModel?>, navController: NavController) {
+fun observeAction(viewModel: AthletesViewModel, action: AthleteScreenAction, athleteChosen: MutableState<AthleteModel?>, navController: NavController) {
     when(action){
         is AthleteScreenAction.NavigateToSessionScreen -> {
             val athlete = Gson().toJson(athleteChosen.value)

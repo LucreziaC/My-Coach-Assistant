@@ -1,8 +1,9 @@
-package com.lucreziacarena.mycoachassistant.views.athletesScreen
+package com.lucreziacarena.mycoachassistant.views.leaderboardScreen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -15,25 +16,29 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester.Companion.createRefs
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import coil.compose.ImagePainter
-import coil.compose.rememberImagePainter
 import com.lucreziacarena.mycoachassistant.R
 import com.lucreziacarena.mycoachassistant.repository.models.AthleteModel
+import coil.compose.ImagePainter
+import coil.compose.rememberImagePainter
+import com.lucreziacarena.mycoachassistant.repository.models.AthleteStatsModel
+
 
 
 
 @Composable
-fun AthleteRowItem(athlet: AthleteModel, onClick: () -> Unit = {}) {
+fun AthleteStatsRowItem(athlet: AthleteStatsModel,peakSpeed:Boolean, numLap: Boolean ) {
     ConstraintLayout(modifier = Modifier
         .padding(10.dp)
         .fillMaxWidth()
-        .clickable { onClick() })
+    )
     {
         val (image, fullname, goNextIcon) = createRefs()
         Image(
@@ -60,28 +65,31 @@ fun AthleteRowItem(athlet: AthleteModel, onClick: () -> Unit = {}) {
                 }
         )
 
-        Text(
-            athlet.name + " " + athlet.surname,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.constrainAs(fullname) {
-                top.linkTo(image.top)
-                bottom.linkTo(image.bottom)
-                start.linkTo(image.end)
-                width = Dimension.fillToConstraints
-            }
-        )
+        Column(modifier = Modifier.constrainAs(fullname) {
+            top.linkTo(image.top)
+            bottom.linkTo(image.bottom)
+            start.linkTo(image.end)
+            width = Dimension.fillToConstraints
+        }) {
+            Text(
+                athlet.name + " " + athlet.surname,
+                color = MaterialTheme.colorScheme.onBackground,
+                fontSize = 15.sp
 
-        Icon(
-            Icons.Filled.NavigateNext,
-            "arrow icon",
-            modifier = Modifier
-                .padding(end = 10.dp)
-                .constrainAs(goNextIcon) {
-                    top.linkTo(image.top)
-                    bottom.linkTo(image.bottom)
-                    end.linkTo(parent.end)
-                }
-        )
+            )
+            Text(
+                "peak speed: $peakSpeed",
+                fontWeight = if(peakSpeed) FontWeight.Bold else FontWeight.Normal,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Text(
+                "numLap: $numLap",
+                fontWeight = if(numLap) FontWeight.Bold else FontWeight.Normal,
+                color = MaterialTheme.colorScheme.onBackground,
+
+            )
+        }
+
+
     }
 }
