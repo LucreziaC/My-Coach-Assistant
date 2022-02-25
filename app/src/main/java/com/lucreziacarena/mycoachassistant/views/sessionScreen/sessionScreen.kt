@@ -275,7 +275,7 @@ fun ControlsBar(
         BottomBarItem.Lap
     )
     NavigationBar(
-        containerColor = androidx.compose.material.MaterialTheme.colors.primary,
+        containerColor = MaterialTheme.colorScheme.primary,
         contentColor = Color.White,
         tonalElevation = 5.dp
     ) {
@@ -289,7 +289,7 @@ fun ControlsBar(
                         contentDescription = item.name
                     )
                 },
-                label = { androidx.compose.material.Text(text = item.name) },
+                label = { androidx.compose.material.Text(text = item.name, color = MaterialTheme.colorScheme.onPrimary) },
                 alwaysShowLabel = true,
                 selected = false,
                 onClick = {
