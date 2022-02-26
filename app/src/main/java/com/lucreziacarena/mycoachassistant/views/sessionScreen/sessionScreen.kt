@@ -31,9 +31,10 @@ import androidx.navigation.NavController
 import coil.compose.ImagePainter
 import coil.compose.rememberImagePainter
 import com.lucreziacarena.mycoachassistant.R
+import com.lucreziacarena.mycoachassistant.navigation.NavigationItem
 import com.lucreziacarena.mycoachassistant.repository.models.AthleteModel
 import com.lucreziacarena.mycoachassistant.utils.Utils
-import com.lucreziacarena.mycoachassistant.views.athletesScreen.States
+import com.lucreziacarena.mycoachassistant.views.athletesScreen.AthletesScreen
 import java.text.DecimalFormat
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -47,7 +48,8 @@ fun SessionScreen(navController: NavController, athlete: AthleteModel, meters: I
     val totalTime = remember { mutableStateOf(1L) }
     val numLap = remember { mutableStateOf(1) }
     val lastTimeRecorded = remember { mutableStateOf(0L) }
-    val sessionIsClosed = remember { mutableStateOf(false) }
+    val stopSession = remember { mutableStateOf(false) }
+    val closeSession = remember { mutableStateOf(false) }
     val loading = remember { mutableStateOf(false) }
     val stopWatch = remember { StopWatch() }
     var pointList = remember { mutableStateOf<ArrayList<Point>>(ArrayList()) }
@@ -63,22 +65,28 @@ fun SessionScreen(navController: NavController, athlete: AthleteModel, meters: I
             ProfileToolbar(athlete, navController)
         },
         bottomBar = {
-            ControlsBar(
-                sessionIsClosed,
-                pointList,
-                lapTimeList,
-                stopWatch::start,
-                stopWatch::stop,
-                stopWatch::getTimOnLap,
-                numLap,
-                lapTimeMap,
-                totalTime,
-                lastTimeRecorded
-            )
+            if(!closeSession.value) {
+                ControlsBar(
+                    stopSession,
+                    pointList,
+                    lapTimeList,
+                    stopWatch::start,
+                    stopWatch::stop,
+                    stopWatch::getTimOnLap,
+                    numLap,
+                    lapTimeMap,
+                    totalTime,
+                    lastTimeRecorded
+                )}
+                else{
+                    CloseSessionBar(viewModel, athlete, numLap, speedMax)
+                }
+
         }
     ) {
 
-        observeStates(viewModel.state, navController,loading)
+        observeStates(viewModel.state,loading)
+        observeActions(navController, viewModel.action, viewModel)
         ConstraintLayout(modifier = Modifier.fillMaxSize()) {
 
             val (stopwatch, stats, chart) = createRefs()
@@ -160,7 +168,7 @@ fun SessionScreen(navController: NavController, athlete: AthleteModel, meters: I
             Spacer(Modifier.height(60.dp))
 
             //CHART
-            if (sessionIsClosed.value) {
+            if (stopSession.value) {
                 LineChart(pointList, Modifier
                     .height(300.dp)
                     .padding(20.dp)
@@ -169,7 +177,7 @@ fun SessionScreen(navController: NavController, athlete: AthleteModel, meters: I
                         start.linkTo(stopwatch.start)
                         end.linkTo(stopwatch.end)
                     })
-                viewModel.send(SessionScreenEvent.OnCloseSession(athlete, numLap.value, speedMax ))
+                closeSession.value = true
             }
         }
     }
@@ -253,6 +261,7 @@ sealed class BottomBarItem(var name: String, var icon: ImageVector?) {
     object Start : BottomBarItem("Start", Icons.Filled.PlayArrow)
     object Stop : BottomBarItem("Stop", Icons.Filled.Stop)
     object Lap : BottomBarItem("Lap", Icons.Filled.RestartAlt)
+    object Close : BottomBarItem("Close", Icons.Filled.Close)
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -284,9 +293,10 @@ fun ControlsBar(
         items.forEach { item ->
             NavigationBarItem(
                 icon = {
-                    androidx.compose.material.Icon(
+                    androidx.compose.material3.Icon(
                         item.icon ?: Icons.Filled.Close,
-                        contentDescription = item.name
+                        contentDescription = item.name,
+                        tint =  MaterialTheme.colorScheme.onPrimary
                     )
                 },
                 label = { androidx.compose.material.Text(text = item.name, color = MaterialTheme.colorScheme.onPrimary) },
@@ -383,18 +393,47 @@ fun LineChart(pointList: MutableState<ArrayList<Point>>, modifier: Modifier) {
         )
     }
 }
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun CloseSessionBar(
+    viewModel: SessionScreenViewModel,
+    athlete: AthleteModel,
+    numLap: MutableState<Int>,
+    speedMax: Long
+) {
+    val item = BottomBarItem.Close
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = Color.White,
+        tonalElevation = 5.dp
+    ) {
+         NavigationBarItem(
+                icon = {
+                    androidx.compose.material3.Icon(
+                        item.icon ?: Icons.Filled.Close,
+                        contentDescription = item.name,
+                        tint =  MaterialTheme.colorScheme.onPrimary
+                    )
+                },
+                label = { androidx.compose.material.Text(text = item.name, color = MaterialTheme.colorScheme.onPrimary) },
+                alwaysShowLabel = true,
+                selected = false,
+                onClick = {
+                    viewModel.send(SessionScreenEvent.OnCloseSession(athlete, numLap.value, speedMax ))
+                }
+            )
+    }
+}
+
 
 
 fun observeStates(
     state: MutableState<SessionState>,
-    navController: NavController,
     showLoading: MutableState<Boolean>
 ) {
     when (state.value) {
         is SessionState.Content -> {
             showLoading.value = false
-            navController.popBackStack()
-
         }
         SessionState.Empty -> {
             showLoading.value = false
@@ -404,5 +443,20 @@ fun observeStates(
 
         }
         SessionState.Loading -> showLoading.value = true
+    }
+}
+
+fun observeActions(
+    navController: NavController,
+    action: MutableState<SessionActions>,
+    viewModel: SessionScreenViewModel
+){
+    when(action.value){
+        SessionActions.NavigateToAthletesList -> {
+            navController.navigate(NavigationItem.Athletes.route)
+            viewModel.send(SessionScreenEvent.NoEvent)
+        }
+        SessionActions.NoAction -> {
+        }
     }
 }

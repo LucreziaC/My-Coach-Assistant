@@ -33,14 +33,21 @@ class AthletesViewModel @Inject constructor(
             AthleteScreenEvent.Init -> {
                 action.value = AthleteScreenAction.NoAction
             }
+
         }
     }
 
+    init{
+        getAthletesList()
+    }
 
-    init {
+
+
+
+    private fun getAthletesList() {
         viewModelScope.launch {
-            repository.getAthelticsList().collect(){flowResult ->
-                when(flowResult){
+            repository.getAthelticsList().collect() { flowResult ->
+                when (flowResult) {
                     is DataState.Error -> state.value = States.Error(flowResult.error)
                     is DataState.Loading -> {
                         state.value = Loading
@@ -66,6 +73,7 @@ sealed class States {
 sealed class AthleteScreenEvent{
     data class InsertedMeters(val meters: Int) : AthleteScreenEvent()
     object Init : AthleteScreenEvent()
+    object GetAthletes : AthleteScreenEvent()
 }
 
 

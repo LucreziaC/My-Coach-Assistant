@@ -18,12 +18,17 @@ class SessionScreenViewModel @Inject constructor(
 ) : ViewModel() {
 
     val state: MutableState<SessionState> = mutableStateOf(SessionState.Empty)
+    val action: MutableState<SessionActions> = mutableStateOf(SessionActions.NoAction)
 
 
     fun send(event: SessionScreenEvent){
         when(event){
             is SessionScreenEvent.OnCloseSession -> {
                 saveSessionInDB(event.athlete, event.numLap, event.speedMax)
+            }
+            SessionScreenEvent.NoEvent -> {
+                action.value = SessionActions.NoAction
+                state.value = SessionState.Empty
             }
         }
     }
@@ -36,7 +41,7 @@ class SessionScreenViewModel @Inject constructor(
                         state.value = SessionState.Loading
                     }
                     is DataState.Success -> {
-                        state.value = SessionState.Content(flowResult.data)
+                        action.value = SessionActions.NavigateToAthletesList
                     }
                     else -> {}
                 }
@@ -46,7 +51,14 @@ class SessionScreenViewModel @Inject constructor(
 
 }
 
+sealed class SessionActions {
+    object NavigateToAthletesList: SessionActions()
+    object NoAction: SessionActions()
+}
+
 sealed class SessionScreenEvent {
+    object NoEvent : SessionScreenEvent()
+
     data class OnCloseSession(val athlete: AthleteModel, val numLap: Int, val speedMax: Long) : SessionScreenEvent()
 }
 sealed class SessionState {
