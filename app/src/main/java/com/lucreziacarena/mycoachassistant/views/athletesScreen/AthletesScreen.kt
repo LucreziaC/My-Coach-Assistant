@@ -104,7 +104,9 @@ fun observeAction(viewModel: AthletesViewModel, action: AthleteScreenAction, ath
             navController.navigate(NavigationItem.Session.route + "?athlete=$athlete&meters=${action.meters}")
             viewModel.send(AthleteScreenEvent.Init)
         }
-        AthleteScreenAction.NoAction -> {}
+        AthleteScreenAction.NoAction -> {
+
+        }
     }
 }
 
