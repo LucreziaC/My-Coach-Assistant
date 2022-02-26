@@ -31,11 +31,10 @@ import androidx.navigation.NavController
 import coil.compose.ImagePainter
 import coil.compose.rememberImagePainter
 import com.lucreziacarena.mycoachassistant.R
+import com.lucreziacarena.mycoachassistant.navigation.NavigationItem
 import com.lucreziacarena.mycoachassistant.repository.models.AthleteModel
-import com.lucreziacarena.mycoachassistant.repository.results.AthletesError
-import com.lucreziacarena.mycoachassistant.ui.components.errorDialog
 import com.lucreziacarena.mycoachassistant.utils.Utils
-import com.lucreziacarena.mycoachassistant.views.athletesScreen.States
+import com.lucreziacarena.mycoachassistant.views.athletesScreen.AthletesScreen
 import java.text.DecimalFormat
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -49,14 +48,12 @@ fun SessionScreen(navController: NavController, athlete: AthleteModel, meters: I
     val totalTime = remember { mutableStateOf(1L) }
     val numLap = remember { mutableStateOf(1) }
     val lastTimeRecorded = remember { mutableStateOf(0L) }
-    val sessionIsClosed = remember { mutableStateOf(false) }
+    val stopSession = remember { mutableStateOf(false) }
+    val closeSession = remember { mutableStateOf(false) }
     val loading = remember { mutableStateOf(false) }
     val stopWatch = remember { StopWatch() }
     var pointList = remember { mutableStateOf<ArrayList<Point>>(ArrayList()) }
     var speedMax by remember { mutableStateOf(0L) }
-
-    val showErrorDialog = remember { mutableStateOf(false) }
-    val errorMessage = remember { mutableStateOf("") }
 
     val decayAnimationSpec = rememberSplineBasedDecay<Float>()
     val scrollBehavior = remember(decayAnimationSpec) {
@@ -68,120 +65,119 @@ fun SessionScreen(navController: NavController, athlete: AthleteModel, meters: I
             ProfileToolbar(athlete, navController)
         },
         bottomBar = {
-            ControlsBar(
-                sessionIsClosed,
-                pointList,
-                lapTimeList,
-                stopWatch::start,
-                stopWatch::stop,
-                stopWatch::getTimOnLap,
-                numLap,
-                lapTimeMap,
-                totalTime,
-                lastTimeRecorded
-            )
+            if(!closeSession.value) {
+                ControlsBar(
+                    stopSession,
+                    pointList,
+                    lapTimeList,
+                    stopWatch::start,
+                    stopWatch::stop,
+                    stopWatch::getTimOnLap,
+                    numLap,
+                    lapTimeMap,
+                    totalTime,
+                    lastTimeRecorded
+                )}
+                else{
+                    CloseSessionBar(viewModel, athlete, numLap, speedMax)
+                }
+
         }
     ) {
 
-        observeStates(viewModel.state, navController,loading, errorMessage, showErrorDialog)
-        if(loading.value){
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-        }
-        if(showErrorDialog.value){
-            errorDialog(showErrorDialog, errorMessage)
-        }else {
-            ConstraintLayout(modifier = Modifier.fillMaxSize()) {
+        observeStates(viewModel.state,loading)
+        observeActions(navController, viewModel.action, viewModel)
+        ConstraintLayout(modifier = Modifier.fillMaxSize()) {
 
-                val (stopwatch, stats, chart) = createRefs()
-                StopWatchDisplay(
-                    formattedTime = stopWatch.formattedTime,
-                    modifier = Modifier
-                        .padding(10.dp)
-                        .constrainAs(stopwatch) {
-                            top.linkTo(parent.top)
-                            start.linkTo(parent.start)
-                            end.linkTo(parent.end)
-                        }
-                )
-                Row(
-                    modifier = Modifier
-                        .constrainAs(stats) {
-                            top.linkTo(stopwatch.bottom)
-                            start.linkTo(parent.start)
-                            end.linkTo(parent.end)
-                        },
-                    horizontalArrangement = Arrangement.SpaceBetween
+            val (stopwatch, stats, chart) = createRefs()
+            StopWatchDisplay(
+                formattedTime = stopWatch.formattedTime,
+                modifier = Modifier
+                    .padding(10.dp)
+                    .constrainAs(stopwatch) {
+                        top.linkTo(parent.top)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    }
+            )
+            Row(
+                modifier = Modifier
+                    .constrainAs(stats) {
+                        top.linkTo(stopwatch.bottom)
+                        start.linkTo(parent.start)
+                        end.linkTo(parent.end)
+                    },
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Times List",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                        //drawChart(timeToCompleteLapMap.value, pointList.value)
-                        LazyColumn {
-                            itemsIndexed(items = lapTimeList) { index, time: String ->
-                                Text("Lap ${index + 1}: $time")
-                            }
+                    Text(
+                        text = "Times List",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    //drawChart(timeToCompleteLapMap.value, pointList.value)
+                    LazyColumn {
+                        itemsIndexed(items = lapTimeList) { index, time: String ->
+                            Text("Lap ${index + 1}: $time")
                         }
                     }
+                }
 
-                    Spacer(modifier = Modifier.width(50.dp))
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = "Stats",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 4.dp)
-                        )
-                        //drawChart(timeToCompleteLapMap.value, pointList.value)
-                        val timesInMillis = mutableListOf<Long>()
-                        val meter = 100
-                        lapTimeMap.value.forEach { (key, value) -> timesInMillis.add(value) }
-                        val df = DecimalFormat("###.##")
+                Spacer(modifier = Modifier.width(50.dp))
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Stats",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    //drawChart(timeToCompleteLapMap.value, pointList.value)
+                    val timesInMillis = mutableListOf<Long>()
+                    val meter = 100
+                    lapTimeMap.value.forEach { (key, value) -> timesInMillis.add(value) }
+                    val df = DecimalFormat("###.##")
 
-                        timesInMillis.map {
-                            try {
-                                val speed = meters / (it / 1000)
-                                if (speed > speedMax)
-                                    speedMax = (it / 1000)
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
+                    timesInMillis.map {
+                        try {
+                            val speed = meters / (it / 1000)
+                            if (speed > speedMax)
+                                speedMax = (it / 1000)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
                         }
-                        if (speedMax != null) {
-                            info("Peak speed: ", "${speedMax.toDouble()} m/s")
-                        }
-                        //average time/lap
-                        if (numLap.value > 0) {
-                            val averageTimeLap = df.format((totalTime.value / 1000).toDouble() / numLap.value)
-
-                            info("Average time/lap: ", averageTimeLap)
-                        }
-                        //average speed
-                        val averageSpeed = df.format((numLap.value * meter) / (totalTime.value / 1000).toDouble())
-                        info("Average speed: ", averageSpeed)
                     }
-                }
-                Spacer(Modifier.height(60.dp))
+                    if (speedMax != null) {
+                        info("Peak speed: ", "${speedMax.toDouble()} m/s")
+                    }
+                    //average time/lap
+                    if (numLap.value > 0) {
+                        val averageTimeLap = df.format((totalTime.value / 1000).toDouble() / numLap.value)
 
-                //CHART
-                if (sessionIsClosed.value) {
-                    LineChart(pointList, Modifier
-                        .height(300.dp)
-                        .padding(20.dp)
-                        .constrainAs(chart) {
-                            top.linkTo(stats.bottom)
-                            start.linkTo(stopwatch.start)
-                            end.linkTo(stopwatch.end)
-                        })
-                    viewModel.send(SessionScreenEvent.OnCloseSession(athlete, numLap.value, speedMax))
+                        info("Average time/lap: ", averageTimeLap)
+                    }
+                    //average speed
+                    val averageSpeed = df.format((numLap.value * meter) / (totalTime.value / 1000).toDouble())
+                    info("Average speed: ", averageSpeed)
                 }
+            }
+            Spacer(Modifier.height(60.dp))
+
+            //CHART
+            if (stopSession.value) {
+                LineChart(pointList, Modifier
+                    .height(300.dp)
+                    .padding(20.dp)
+                    .constrainAs(chart) {
+                        top.linkTo(stats.bottom)
+                        start.linkTo(stopwatch.start)
+                        end.linkTo(stopwatch.end)
+                    })
+                closeSession.value = true
             }
         }
     }
@@ -265,6 +261,7 @@ sealed class BottomBarItem(var name: String, var icon: ImageVector?) {
     object Start : BottomBarItem("Start", Icons.Filled.PlayArrow)
     object Stop : BottomBarItem("Stop", Icons.Filled.Stop)
     object Lap : BottomBarItem("Lap", Icons.Filled.RestartAlt)
+    object Close : BottomBarItem("Close", Icons.Filled.Close)
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -296,9 +293,10 @@ fun ControlsBar(
         items.forEach { item ->
             NavigationBarItem(
                 icon = {
-                    androidx.compose.material.Icon(
+                    androidx.compose.material3.Icon(
                         item.icon ?: Icons.Filled.Close,
-                        contentDescription = item.name
+                        contentDescription = item.name,
+                        tint =  MaterialTheme.colorScheme.onPrimary
                     )
                 },
                 label = { androidx.compose.material.Text(text = item.name, color = MaterialTheme.colorScheme.onPrimary) },
@@ -395,36 +393,70 @@ fun LineChart(pointList: MutableState<ArrayList<Point>>, modifier: Modifier) {
         )
     }
 }
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun CloseSessionBar(
+    viewModel: SessionScreenViewModel,
+    athlete: AthleteModel,
+    numLap: MutableState<Int>,
+    speedMax: Long
+) {
+    val item = BottomBarItem.Close
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = Color.White,
+        tonalElevation = 5.dp
+    ) {
+         NavigationBarItem(
+                icon = {
+                    androidx.compose.material3.Icon(
+                        item.icon ?: Icons.Filled.Close,
+                        contentDescription = item.name,
+                        tint =  MaterialTheme.colorScheme.onPrimary
+                    )
+                },
+                label = { androidx.compose.material.Text(text = item.name, color = MaterialTheme.colorScheme.onPrimary) },
+                alwaysShowLabel = true,
+                selected = false,
+                onClick = {
+                    viewModel.send(SessionScreenEvent.OnCloseSession(athlete, numLap.value, speedMax ))
+                }
+            )
+    }
+}
+
 
 
 fun observeStates(
     state: MutableState<SessionState>,
-    navController: NavController,
-    showLoading: MutableState<Boolean>,
-    errorMessage: MutableState<String>,
-    showErrorDialog: MutableState<Boolean>,
+    showLoading: MutableState<Boolean>
 ) {
     when (state.value) {
         is SessionState.Content -> {
             showLoading.value = false
-            navController.popBackStack()
-
         }
         SessionState.Empty -> {
             showLoading.value = false
         }
         is SessionState.Error -> {
-            when(val error = (state.value as SessionState.Error).error){
-                is AthletesError.GenericError -> {
-                    errorMessage.value = error.message ?: "Errore"
-                    showErrorDialog.value = true
-                }
-                AthletesError.NoAthletesFound -> {}
-            }
             showLoading.value = false
-
 
         }
         SessionState.Loading -> showLoading.value = true
+    }
+}
+
+fun observeActions(
+    navController: NavController,
+    action: MutableState<SessionActions>,
+    viewModel: SessionScreenViewModel
+){
+    when(action.value){
+        SessionActions.NavigateToAthletesList -> {
+            navController.navigate(NavigationItem.Athletes.route)
+            viewModel.send(SessionScreenEvent.NoEvent)
+        }
+        SessionActions.NoAction -> {
+        }
     }
 }

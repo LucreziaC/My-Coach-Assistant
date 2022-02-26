@@ -2,6 +2,7 @@ package com.lucreziacarena.mycoachassistant.ui.components
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -13,10 +14,11 @@ import androidx.navigation.navArgument
 import com.google.gson.Gson
 import com.lucreziacarena.mycoachassistant.navigation.NavigationItem
 import com.lucreziacarena.mycoachassistant.repository.models.AthleteModel
-import com.lucreziacarena.mycoachassistant.views.LeaderboardScreen
+import com.lucreziacarena.mycoachassistant.views.leaderboardScreen.LeaderboardScreen
 import com.lucreziacarena.mycoachassistant.views.athletesScreen.AthletesScreen
 import com.lucreziacarena.mycoachassistant.views.sessionScreen.SessionScreen
 
+@OptIn(ExperimentalFoundationApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @ExperimentalMaterial3Api
 @Composable
@@ -28,7 +30,7 @@ fun Navigation(navController: NavHostController, bottomBarState: MutableState<Bo
         }
         composable(NavigationItem.Leaderboard.route) {
             bottomBarState.value = true
-            LeaderboardScreen()
+            LeaderboardScreen(navController)
         }
         composable(
             route = NavigationItem.Session.route + "?athlete={athlete}&meters={meters}",

@@ -23,6 +23,8 @@ class AthletesViewModel @Inject constructor(
     val action: MutableState<AthleteScreenAction> =
         mutableStateOf(AthleteScreenAction.NoAction)
 
+    val athletList = mutableListOf<AthleteModel>()
+
     fun send(event: AthleteScreenEvent) {
         when(event){
             is AthleteScreenEvent.InsertedMeters -> {
@@ -31,20 +33,28 @@ class AthletesViewModel @Inject constructor(
             AthleteScreenEvent.Init -> {
                 action.value = AthleteScreenAction.NoAction
             }
+
         }
     }
 
+    init{
+        getAthletesList()
+    }
 
-    init {
+
+
+
+    private fun getAthletesList() {
         viewModelScope.launch {
-            repository.getAthelticsList().collect(){flowResult ->
-                when(flowResult){
+            repository.getAthelticsList().collect() { flowResult ->
+                when (flowResult) {
                     is DataState.Error -> state.value = States.Error(flowResult.error)
                     is DataState.Loading -> {
                         state.value = Loading
                     }
                     is DataState.Success -> {
                         state.value = Content(flowResult.data)
+                        athletList.addAll(flowResult.data)
                     }
                 }
             }
@@ -63,6 +73,7 @@ sealed class States {
 sealed class AthleteScreenEvent{
     data class InsertedMeters(val meters: Int) : AthleteScreenEvent()
     object Init : AthleteScreenEvent()
+    object GetAthletes : AthleteScreenEvent()
 }
 
 

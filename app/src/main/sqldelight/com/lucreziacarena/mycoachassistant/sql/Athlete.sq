@@ -31,6 +31,14 @@ insertAthletSession:
 INSERT OR REPLACE INTO athleteSession(name, surname, picture, peakSpeed, numLap)
 VALUES (?,?,?,?,?);
 
+getAthletesOrderByPeakSpeed:
+SELECT * FROM athleteSession
+ORDER BY peakSpeed;
+
+getAthletesOrderByNumLap:
+SELECT * FROM athleteSession
+ORDER BY numLap;
+
 
 
 

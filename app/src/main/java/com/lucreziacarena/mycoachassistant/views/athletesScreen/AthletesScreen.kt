@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -21,22 +20,20 @@ import com.lucreziacarena.mycoachassistant.navigation.NavigationItem
 import com.lucreziacarena.mycoachassistant.repository.models.AthleteModel
 import com.lucreziacarena.mycoachassistant.repository.results.AthletesError
 import com.lucreziacarena.mycoachassistant.ui.components.TopAppBar
-import com.lucreziacarena.mycoachassistant.ui.components.errorDialog
 
 
 @ExperimentalMaterial3Api
 @Composable
 fun AthletesScreen(navController: NavController) {
     val viewModel = hiltViewModel<AthletesViewModel>()
-    val athletesList = remember { mutableListOf<AthleteModel>() }
+    val athletesList = remember { viewModel.athletList }
     val errorMessage = remember { mutableStateOf("") }
     val showErrorDialog = remember { mutableStateOf(false) }
     val showLoading = remember { mutableStateOf(false) }
-    val noAthletesFound = remember { mutableStateOf(false) }
     val meters = remember { mutableStateOf(0) }
     val athleteChosen: MutableState<AthleteModel?> = remember { mutableStateOf(null) }
-    observeStates(viewModel.state.value, athletesList, errorMessage, showErrorDialog, showLoading, noAthletesFound)
-    observeAction(viewModel, viewModel.action.value, athleteChosen, navController)
+    observeStates(viewModel.state.value, athletesList, errorMessage, showErrorDialog, showLoading)
+    observeAction(viewModel,viewModel.action.value, athleteChosen,navController)
 
     val decayAnimationSpec = rememberSplineBasedDecay<Float>()
     val scrollBehavior = remember(decayAnimationSpec) {
@@ -44,20 +41,13 @@ fun AthletesScreen(navController: NavController) {
     }
     Scaffold(
         modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            TopAppBar(
-                "Athlets List",
-                navController = navController,
-                scrollBehavior = scrollBehavior,
-                backNavigation = false
-            )
-        }
+        topBar = { TopAppBar("Athletes List", navController = navController, scrollBehavior = scrollBehavior, backNavigation = false) }
     ) {
 
         val openDialog = remember { mutableStateOf(false) }
         var text by remember { mutableStateOf("") }
 
-        if (openDialog.value) { //insert meter dialog
+        if (openDialog.value) {
             AlertDialog(
                 onDismissRequest = {
                     openDialog.value = false
@@ -90,40 +80,25 @@ fun AthletesScreen(navController: NavController) {
                 }
             )
         }
-        if(showErrorDialog.value){
-            errorDialog(showErrorDialog, errorMessage)
-        }
 
-        if (noAthletesFound.value) {
-            Text("No athletes found", textAlign = TextAlign.Center)
-        } else if (showLoading.value) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-        } else {
-            LazyColumn(
-            ) {
-                itemsIndexed(athletesList) { index, athlete ->
-                    AthleteRowItem(athlete) {
-                        openDialog.value = true
-                        athleteChosen.value = athlete
-                    }
-
-                    if (index < athletesList.lastIndex)
-                        Divider(color = MaterialTheme.colorScheme.primary, thickness = 1.dp)
+        LazyColumn(
+        ) {
+            itemsIndexed(athletesList) { index, athlete ->
+                AthleteRowItem(athlete) {
+                    openDialog.value = true
+                    athleteChosen.value = athlete
                 }
+
+                if (index < athletesList.lastIndex)
+                    Divider(color = MaterialTheme.colorScheme.primary, thickness = 1.dp)
             }
         }
     }
 
 }
 
-
-fun observeAction(
-    viewModel: AthletesViewModel,
-    action: AthleteScreenAction,
-    athleteChosen: MutableState<AthleteModel?>,
-    navController: NavController
-) {
-    when (action) {
+fun observeAction(viewModel: AthletesViewModel, action: AthleteScreenAction, athleteChosen: MutableState<AthleteModel?>, navController: NavController) {
+    when(action){
         is AthleteScreenAction.NavigateToSessionScreen -> {
             val athlete = Gson().toJson(athleteChosen.value)
             navController.navigate(NavigationItem.Session.route + "?athlete=$athlete&meters=${action.meters}")
@@ -138,20 +113,17 @@ fun observeStates(
     athletesList: MutableList<AthleteModel>,
     errorMessage: MutableState<String>,
     showErrorDialog: MutableState<Boolean>,
-    showLoading: MutableState<Boolean>,
-    noAthletesFound: MutableState<Boolean>
+    showLoading: MutableState<Boolean>
 ) {
     when (state) {
         is States.Content -> {
             showLoading.value = false
-            noAthletesFound.value = false
             athletesList.clear()
             athletesList.addAll(state.athletesList)
 
         }
         States.Empty -> {
             showLoading.value = false
-            noAthletesFound.value = false
         }
         is States.Error -> {
             showLoading.value = false
@@ -161,7 +133,7 @@ fun observeStates(
                     showErrorDialog.value = true
                 }
                 AthletesError.NoAthletesFound -> {
-                    noAthletesFound.value = true
+
                 }
             }
         }

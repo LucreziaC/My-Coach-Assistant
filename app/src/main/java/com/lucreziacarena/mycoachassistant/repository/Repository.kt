@@ -3,6 +3,7 @@ package com.lucreziacarena.mycoachassistant.repository
 import com.lucreziacarena.mycoachassistant.db.AppDatabase
 import com.lucreziacarena.mycoachassistant.repository.api.ApiHelper
 import com.lucreziacarena.mycoachassistant.repository.models.AthleteModel
+import com.lucreziacarena.mycoachassistant.repository.models.AthleteStatsModel
 import com.lucreziacarena.mycoachassistant.repository.models.toDbEntity
 import com.lucreziacarena.mycoachassistant.repository.models.toDomain
 import com.lucreziacarena.mycoachassistant.repository.results.AthletesError
@@ -17,7 +18,8 @@ import javax.inject.Inject
 interface Repository {
     suspend fun getAthelticsList(): Flow<DataState<List<AthleteModel>>>
     suspend fun saveAthletStats(athlete: AthleteModel, numLap: Int, speedMax: Long): Flow<DataState<Boolean>>
-
+    suspend fun getAthletStatsByNumLap(): Flow<DataState<List<AthleteStatsModel>>>
+    suspend fun getAthletStatsByPeakSpeed(): Flow<DataState<List<AthleteStatsModel>>>
 }
 
 class RepositoryImpl @Inject constructor(
@@ -65,6 +67,46 @@ class RepositoryImpl @Inject constructor(
                 emit(DataState.Loading)
                 database.athleteQueries.insertAthletSession(athlete.name, athlete.surname, athlete.picture, speedMax, numLap.toLong())
                 emit(DataState.Success(data = true))
+            } catch (e: Exception) {
+                emit(DataState.Error(AthletesError.GenericError(e.message ?: "Error")))
+            }
+        }
+    }
+
+    override suspend fun getAthletStatsByNumLap(): Flow<DataState<List<AthleteStatsModel>>> {
+        return flow {
+            try {
+                emit(DataState.Loading)
+                val data = database.athleteQueries.getAthletesOrderByNumLap().executeAsList()
+                lateinit var athleteList: List<AthleteStatsModel>
+                if(data.isNotEmpty()) {
+                    athleteList = data.map {
+                        AthleteStatsModel(it.name!!, it.surname!!, it.picture!!, it.peakSpeed!!, it.numLap!!.toInt())
+                    }
+                }else{
+                    emit(DataState.Error(AthletesError.NoAthletesFound))
+                }
+                emit(DataState.Success(data = athleteList))
+            } catch (e: Exception) {
+                emit(DataState.Error(AthletesError.GenericError(e.message ?: "Error")))
+            }
+        }
+    }
+
+    override suspend fun getAthletStatsByPeakSpeed(): Flow<DataState<List<AthleteStatsModel>>> {
+        return flow {
+            try {
+                emit(DataState.Loading)
+                val data = database.athleteQueries.getAthletesOrderByPeakSpeed().executeAsList()
+                lateinit var athleteList: List<AthleteStatsModel>
+                if(data.isNotEmpty()) {
+                    athleteList = data.map {
+                        AthleteStatsModel(it.name!!, it.surname!!, it.picture!!, it.peakSpeed!!, it.numLap!!.toInt())
+                    }
+                }else{
+                    emit(DataState.Error(AthletesError.NoAthletesFound))
+                }
+                emit(DataState.Success(data = athleteList))
             } catch (e: Exception) {
                 emit(DataState.Error(AthletesError.GenericError(e.message ?: "Error")))
             }
