@@ -87,6 +87,7 @@ fun SessionScreen(navController: NavController, athlete: AthleteModel, meters: I
 
         observeStates(viewModel.state,loading)
         observeActions(navController, viewModel.action, viewModel)
+
         ConstraintLayout(modifier = Modifier.fillMaxSize()) {
 
             val (stopwatch, stats, chart) = createRefs()
